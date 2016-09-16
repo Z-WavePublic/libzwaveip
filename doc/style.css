@@ -1,0 +1,106 @@
+
+/* Tab general background */
+.tabs, .tabs2, .tabs3 {
+
+  background-image: none;
+  background-color: #1a365d;
+  width: 100%;
+  z-index: 101;
+  font-size: 13px;
+  font-family: 'Lucida Grande',Geneva,Helvetica,Arial,sans-serif;
+}
+
+/* Tab page background*/
+.tablist li {
+  border-right: 1px solid  #0a264d;
+  background-image: none;
+}
+
+/* Tab link */
+.tablist a {
+  color: #FFFFFF;
+  text-shadow: none; 
+  background-image:  none;
+}
+
+/*Hover over tab */
+.tablist a:hover {
+  background-image: none;
+  text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.9);
+}
+
+/* Selected tab */
+.tablist li.current a {
+    background-image: none;
+    color: #fff;
+    text-shadow: 0px 1px 1px rgba(255, 255, 255, 0.9);
+    text-decoration: underline;
+}
+
+/*The split bar*/
+.ui-resizable-e {
+  background-color: #1a365d;
+  background-image: none;
+}
+
+/* All links */
+a {
+  color: #1a365d;
+}
+
+.contents a:visited {
+	color: #1a365d;
+}
+
+/*Footer */
+.navpath ul {
+  background-color: #1a365d;
+  background-image: none;
+
+}
+
+.navpath li.footer {
+  color: #FFFFFF;
+}
+
+
+
+#footer {
+    width: 100%;
+    bottom: 0;
+    left: 0;
+    position: relative;
+}
+.region-footer {
+    margin-top: 80px;
+    background: #dedede;
+    padding: 0;
+}
+
+.container, .region-footer .block-block {
+    width: 960px;
+    margin: 0 auto;
+}
+.region-footer .footer-menu {
+    width: 40%;
+    float: left;
+    padding: 28px 0;
+}
+.region-footer .footer-logo {
+    width: 20%;
+    float: left;
+    text-align: center;
+}
+.region-footer .footer-copy {
+    width: 40%;
+    float: left;
+    text-align: right;
+    padding: 28px 0;
+}
+
+blockquote {
+border-left: 6px solid #e4e4e4;
+    padding-left: 15px;
+}
+
+

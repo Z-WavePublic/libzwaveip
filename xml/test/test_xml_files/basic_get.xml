@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<zw_classes>
+  <cmd_class key="0x20" version="1" name="COMMAND_CLASS_BASIC" help="Command Class Basic" read_only="false" comment="">
+    <cmd key="0x02" name="BASIC_GET" help="Basic Get" comment="" />
+    <cmd key="0x03" name="BASIC_REPORT" help="Basic Report" comment="">
+      <param key="0x00" name="Value" type="BYTE" typehashcode="0x01" comment="">
+        <valueattrib key="0x00" hasdefines="false" showhex="true" />
+      </param>
+    </cmd>
+  </cmd_class>
+</zw_classes>

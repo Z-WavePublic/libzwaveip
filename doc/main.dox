@@ -1,0 +1,40 @@
+/**
+\mainpage libzwaveip - 
+
+\section intro Introduction
+libzwaveip is a library making it easier to control Z-Wave devices from an IP network via a Z/IP Gateway.
+
+\section example_apps Example applications
+Two example applications are provided: reference_client and reference_listener. The reference_client is
+a command line client for adding, removing and sending commands to Z-Wave nodes. The Z-Wave listener
+listens for notifications from the Z-Wave network. When a notification arrives it is decoded and pretty-printed.
+
+\section build Build instructions 
+To build the example applications, follow these steps 
+To build the libzwaveip reference_client and reference_listener on the raspberry pi, please do the following.
+
+1. Prepare the Raspberry Pi SD image acorting to the instructions at www.zwavepublic.com
+2. SSH into the Raspberry Pi
+3. Install prerequisites:
+@code
+   $ sudo apt-get install cmake libssl-dev libavahi-client-dev libxml2-dev libbsd libncurses5-dev
+@endcode
+4. Change to the directory containing the libzwaveip source is pre-installed:
+@code
+   $ cd ~/work/libzwaveip
+@endcode
+5. Create and enter the build folder
+@code
+   $ mkdir build
+   $ cd build
+@endcode
+6. Generate makefiles:
+@code
+   $ cmake ..
+@endcode
+7. Build the reference client and listener:
+@code
+   $ make
+@endcode
+
+ */
