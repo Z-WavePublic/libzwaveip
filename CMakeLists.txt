@@ -30,4 +30,5 @@ message("---- make doc will not work until doxygen is installed")
 ENDIF (NOT DOXYGEN_FOUND)
 
 add_custom_target(doc
-	COMMAND doxygen ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile)
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doc
+  COMMAND doxygen ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile)
