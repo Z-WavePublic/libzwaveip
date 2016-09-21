@@ -35,3 +35,4 @@ To test the reference_client, make sure the zipgateway is running and connect to
 
 See section "Working with the Reference Z/IP client" in [this guide](http://zwavepublic.com/developer)
 for instructions on using the reference_client.
+

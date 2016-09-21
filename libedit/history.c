@@ -48,7 +48,11 @@ __RCSID("$NetBSD: history.c,v 1.57 2016/04/11 18:56:31 christos Exp $");
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
+#if (defined(__APPLE__) && defined(__MACH__))
+#include <vis.h>
+#else
 #include <bsd/vis.h>
+#endif
 
 static const char hist_cookie[] = "_HiStOrY_V2_\n";
 
