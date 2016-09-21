@@ -436,7 +436,7 @@ static void cmd_send(const char *input) {
     service_name++;                             /* strip opening quote */
     service_name[strlen(service_name) - 1] = 0; /* strip closing quote */
   }
-  for (n = zresource_services; n; n = n->next) {
+  for (n = zresource_get(); n; n = n->next) {
     if (0 == strcmp(n->service_name, service_name)) {
       const char *result;
       /* Try connecting via IPv6 first */
@@ -484,7 +484,7 @@ static void cmd_list_service(void) {
   ;
 
   printf("List of discovered Z/IP services:\n");
-  for (n = zresource_services; n; n = n->next) {
+  for (n = zresource_get(); n; n = n->next) {
     printf("--- %20s: \"%s\"\n", n->host_name, n->service_name);
   }
 }

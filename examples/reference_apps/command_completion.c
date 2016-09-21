@@ -145,7 +145,7 @@ int static parse_token(const char* token) {
     case DESTINATION: {
       rl_basic_word_break_characters = "\"";
       rl_quote_completion = 1;
-      struct zip_service* s = zresource_services;
+      struct zip_service* s = zresource_get();
       for (; s; s = s->next) {
         if (strcmp(s->service_name, token) == 0) {
           parser.state = COMMAND_CLASS;
@@ -271,7 +271,7 @@ static char* operation_generator(const char* text, int state) {
       }
       break;
     case DESTINATION: {
-      struct zip_service* s = zresource_services;
+      struct zip_service* s = zresource_get();
       int n = 0;
       char buf[512];
 

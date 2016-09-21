@@ -100,7 +100,9 @@ struct zip_service
  * }
  * @endcode
  */
-extern struct zip_service* zresource_services;
+//extern struct zip_service* zresource_services;
+
+struct zip_service* zresource_get();
 
 /**
  * Thread function of the mdns listner. This is the main loop of the mdns thread. This should normally be run

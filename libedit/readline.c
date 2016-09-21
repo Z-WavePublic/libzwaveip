@@ -48,8 +48,11 @@ __RCSID("$NetBSD: readline.c,v 1.138 2016/09/01 13:23:44 mbalmer Exp $");
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+#include <vis.h>
+#else
 #include <bsd/vis.h>
-
+#endif
 #include "readline/readline.h"
 #include "el.h"
 #include "fcns.h"

@@ -27,6 +27,11 @@
 #include <arpa/inet.h>
 struct zip_service* zresource_services;
 
+struct zip_service* zresource_get() {
+  return zresource_services;
+}
+
+
 struct zip_service* find_service(const char* name) {
   struct zip_service* n;
   for (n = zresource_services; n; n = n->next) {
