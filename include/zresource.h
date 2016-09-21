@@ -90,18 +90,16 @@ struct zip_service
 };
 
 /**
- * First elemnets in a linked list of Z/IP services
+ * get a linked list of Z/IP services
  *
  * The list may be iterated like this
  * @code{.c}
  * struct zip_service* n;;
- * for(n = zresource_services; n ; n=n->next) {
+ * for(n = zresource_get(); n ; n=n->next) {
  *  ...
  * }
  * @endcode
  */
-//extern struct zip_service* zresource_services;
-
 struct zip_service* zresource_get();
 
 /**

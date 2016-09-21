@@ -32,7 +32,7 @@
 
 /* Define to 1 if you have getpwnam_r and getpwuid_r that are POSIX.1
    compatible. */
-#if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
+#if (defined(__APPLE__) && defined(__MACH__))
 #undef HAVE_GETPW_R_POSIX
 #else
 #define HAVE_GETPW_R_POSIX 1
