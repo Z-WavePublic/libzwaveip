@@ -36,19 +36,3 @@ To test the reference_client, make sure the zipgateway is running and connect to
 See section "Working with the Reference Z/IP client" in [this guide](http://zwavepublic.com/developer)
 for instructions on using the reference_client.
 
-Build instructions for OSX
---------------------------
-Builds on OSX have been tested with brew packages.
-
-To Compile, make sure you have the necessary packages installed:
-```bash
-$ brew install cmake openssl doxygen
-$ git clone https://github.com/Z-WavePublic/libzwaveip.git
-$ cd libzwaveip
-$ mkdir build
-$ cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl/ -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib/ ..
-$ make
-```
-
-You need to supply the path to the copy of openssl installed with brew, as the default openssl library on OSX is not compatible. 
-
