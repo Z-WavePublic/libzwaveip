@@ -17,7 +17,7 @@ To build the libzwaveip reference_client and reference_listener on the raspberry
 2. SSH into the Raspberry Pi
 3. Install prerequisites:
 @code
-   $ sudo apt-get install cmake libssl-dev libavahi-client-dev libxml2-dev libbsd libncurses5-dev
+   $ sudo apt-get install cmake libssl-dev libavahi-client-dev libxml2-dev libbsd-dev libncurses5-dev
 @endcode
 4. Change to the directory containing the libzwaveip source is pre-installed:
 @code
