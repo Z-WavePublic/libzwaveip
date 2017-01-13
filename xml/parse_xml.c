@@ -552,7 +552,7 @@ start_zwave:
                   if (xmlNodeIsText(ptype_i)) continue;
 
                   /* Converting two bytes into integer*/
-                  long_value = long_value + input[index++] << 16;
+                  long_value = input[index++] << 16;
                   long_value = long_value + input[index++] << 8;
                   long_value = long_value + input[index++];
 
