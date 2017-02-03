@@ -16,3 +16,6 @@ add_custom_command(OUTPUT zw_gen_hdr.c
 
 add_library(parse_xml parse_xml.c)
 add_library(zw_cmd_tool zw_cmd_tool.c  zw_gen_hdr.c )
+
+install (TARGETS zw_cmd_tool DESTINATION lib)
+
