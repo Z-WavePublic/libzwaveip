@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <arpa/inet.h>
+#include <stdint.h>
 struct zip_service* zresource_services;
 
 struct zip_service* zresource_get() {
@@ -99,12 +100,19 @@ void zresource_update_service_info(struct zip_service* n,
     memcpy(&n->addr6, in, sizeof(struct sockaddr_in6));
   }
 
-  const uint8_t* p = txtRecord;
-  while (p < (txtRecord + txtLen)) {
-    memcpy(record, p, *p);
+  const uint8_t*  p;
+  for (p = txtRecord; p < (txtRecord + txtLen); p += *p + 1) {
+    if (*p > sizeof(record) - 1) {
+      continue;
+    }
+    memcpy(record, p+1, *p);
     record[*p] = 0;
+    /* TODO: Verify that neither key nor val exceeds record[] */
     char* key = strtok(record, "=");
-    char* val = strtok(NULL, "=");
+    if (key == NULL) {
+          continue;
+    }
+    uint8_t *val = (uint8_t*)key + strlen(key) + 1;
     int vallen = *p - strlen(key) - 1;
 
     if (strcmp(record, "info") == 0) {
@@ -132,6 +140,5 @@ void zresource_update_service_info(struct zip_service* n,
       n->installer_iconID = htons(*((uint16_t*)val));
       n->user_iconID = htons(*((uint16_t*)val + 1));
     }
-    p += *p + 1;
   }
 }
