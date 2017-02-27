@@ -261,8 +261,7 @@ void cmd_remove_node(struct zconnection *zc) {
   buf[idx++] = NODE_REMOVE;
   buf[idx++] = get_unique_seq_no();
   buf[idx++] = 0;
-  buf[idx++] = 0x01; /* ADD_NODE_ANY */
-  buf[idx++] = 0;    /* Normal power, no NWI */
+  buf[idx++] = 0x01; /* REMOVE_NODE_ANY */
 
   zconnection_send_async(zc, buf, idx, 0);
 }
