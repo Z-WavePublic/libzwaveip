@@ -237,7 +237,41 @@ cleanup:
 
 void transmit_done(struct zconnection *zc, transmission_status_code_t status);
 
-void cmd_do_learn_mode(struct zconnection *zc) { printf("Learn command:\n"); }
+
+void cmd_do_learn_mode(struct zconnection *zc, char* line) {
+  int idx = 0;
+  char buf[200];
+  uint8_t mode;
+
+  if (!line)
+  {
+    mode = 1;
+  }
+  else
+  {
+      if (!strcmp(line, "help"))
+      {
+        print_learnmode_usage();
+        return;
+      }
+      if (!strcmp(line, "nwi"))
+        mode = 2;
+      else if (!strcmp(line, "nwe"))
+        mode = 3;
+      else if (!strcmp(line, "dis"))
+        mode = 3;
+      else
+        mode = 1;
+  }
+
+  buf[idx++] = COMMAND_CLASS_NETWORK_MANAGEMENT_BASIC;
+  buf[idx++] = LEARN_MODE_SET;
+  buf[idx++] = get_unique_seq_no();
+  buf[idx++] = 0;
+  buf[idx++] = mode; /* ADD_NODE_S2 */
+
+  zconnection_send_async(zc, buf, idx, 0);
+}
 
 void cmd_add_node(struct zconnection *zc) {
   int idx = 0;
@@ -498,7 +532,7 @@ void process_commandline_command(const char *input, struct zconnection *zc) {
 
   cmd = strtok(strdup(input), " ");
   if (!strcmp(cmd, "learnmode")) {
-    cmd_do_learn_mode(zc);
+    cmd_do_learn_mode(zc, strtok(NULL, " "));
   } else if (!strcmp(cmd, "help")) {
     zw_cmd_tool_display_help(stdout, (char *)input);
   } else if (!strcmp(cmd, "grantkeys")) {

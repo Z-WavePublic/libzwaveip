@@ -150,4 +150,5 @@ int zw_cmd_tool_create_zw_command(uint8_t* dst, int dst_len,
  */
 void zw_cmd_tool_display_help(FILE* f, char* line);
 
+void print_learnmode_usage();
 #endif /* XML_ZW_CMD_TOOL_H_ */
