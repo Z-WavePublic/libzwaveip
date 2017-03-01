@@ -322,15 +322,36 @@ static void print_paramter(FILE* f, const struct zw_parameter* p, int indent) {
   }
 }
 
+void print_learnmode_usage()
+{
+    printf("Usage: learnmode [OPTION]\n");
+    printf("OPTION:\n");
+    printf("\tnwi: Network wide inclusion\n");
+    printf("\tdis: Disable learnmode\n\n");
+    printf("\tdefault(no option): classic\n");
+    printf("\te.g. learnmode nwi\n");
+    return;
+}
+
 void zw_cmd_tool_display_help(FILE* f, char* line) {
   char* cmd = strtok(line, " ");
   const char* zwcmdclass = strtok(0, " ");
   const char* zwcmd = strtok(0, " ");
 
-  if (cmd == 0 || zwcmd == 0 || zwcmdclass == 0) {
+  if (zwcmdclass == 0) {
+    printf("Usage: help [acceptdsk|addnode|bye|exit|grantkeys|hexsend|learnmode|list|quit|removenode|send|setdefault]\n");
+    printf("Usage: help <tab>: for autocompleting Z-Wave command class names\n");
     return;
   }
 
+  if(!strcmp(zwcmdclass, "learnmode"))
+  {
+    print_learnmode_usage();
+    return;
+  }
+  if (cmd == 0 || zwcmd == 0) {
+    return;
+  }
   const struct zw_command* p_cmd;
   const struct zw_command_class* p_class;
   const struct zw_parameter* const* p_paramter;

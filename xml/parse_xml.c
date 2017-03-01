@@ -427,9 +427,9 @@ start_zwave:
                       if (input[index] == valuei) {
                         print_prop_to_strings(ptype_i, output, "\t", "flagname",
                                               line_no, "        ", APPEND);
-                        goto done;
                       }
                     }
+                    goto done;
                   } else {
                     if (prop_matches(ptype_i, "showhex", "true") ||
                         xmlHasProp(param_i, "encaptype"))  // this line should

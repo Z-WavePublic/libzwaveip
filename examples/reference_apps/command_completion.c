@@ -50,6 +50,7 @@ struct command {
 char* commands[] = {"help",       "quit",    "bye",       "exit",
                     "send",       "hexsend", "addnode",   "removenode",
                     "setdefault", "list",    "acceptdsk", "grantkeys",
+                    "learnmode",
                     0};
 
 static const char* cmd_names[512];
