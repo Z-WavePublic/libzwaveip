@@ -65,6 +65,9 @@ const struct zw_command* zw_cmd_tool_get_cmd_by_name(
     const struct zw_command_class* cls, const char* name) {
   const struct zw_command* const* c;
   int n = 0;
+  if (!cls)
+	return 0;
+
   for (c = cls->commands; *c; c++) {
     if (strcmp(name, (*c)->name) == 0) {
       return *c;
