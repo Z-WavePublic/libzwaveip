@@ -330,7 +330,6 @@ void print_learnmode_usage()
     printf("Usage: learnmode [OPTION]\n");
     printf("OPTION:\n");
     printf("\tnwi: Network wide inclusion\n");
-    printf("\tnwe: Network wide exclusion\n");
     printf("\tdis: Disable learnmode\n\n");
     printf("\tdefault(no option): classic\n");
     printf("\te.g. learnmode nwi\n");

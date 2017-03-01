@@ -256,10 +256,8 @@ void cmd_do_learn_mode(struct zconnection *zc, char* line) {
       }
       if (!strcmp(line, "nwi"))
         mode = 2;
-      else if (!strcmp(line, "nwe"))
-        mode = 3;
       else if (!strcmp(line, "dis"))
-        mode = 3;
+        mode = 0;
       else
         mode = 1;
   }
