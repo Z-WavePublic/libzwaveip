@@ -33,6 +33,7 @@ struct app_config {
   uint8_t psk_len;
   char listen_ip[200]; /* longest wellformed ipv6 text encoded is 39 bytes
                           long, this should suffice */
+  uint16_t listen_port;
 } cfg;
 
 void application_command_handler(struct zconnection *connection,
@@ -67,7 +68,7 @@ static void print_usage(void) {
   printf("\n");
   printf(
       "Usage: reference_listner -l <IP address of interface to listen on> [-p "
-      "PSK]\n");
+      "PSK] [-o Port] \n");
   printf("\n");
   printf("NOTE: IP address can be both IPv4 or IPv6\n");
   printf("for example \n");
@@ -107,16 +108,24 @@ void parse_listen_ip(struct app_config *cfg, char *optarg) {
   strncpy(cfg->listen_ip, optarg, sizeof(cfg->listen_ip));
 }
 
+void parse_listen_port(struct app_config *cfg, char *optarg) {
+    printf("_-------%s\n", optarg);
+    cfg->listen_port = atoi(optarg);
+
+}
 static void parse_prog_args(int prog_argc, char **prog_argv) {
   int opt;
 
-  while ((opt = getopt(prog_argc, prog_argv, "p:l:")) != -1) {
+  while ((opt = getopt(prog_argc, prog_argv, "p:l:o:")) != -1) {
     switch (opt) {
       case 'p':
         parse_psk(&cfg, optarg);
         break;
       case 'l':
         parse_listen_ip(&cfg, optarg);
+        break;
+      case 'o':
+        parse_listen_port(&cfg, optarg); 
         break;
       default: /* '?' */
         print_usage();
@@ -146,8 +155,11 @@ int main(int argc, char **argv) {
       printf("PSK not configured - using default\n");
     }
 
-    printf("Listening on %s port %u\n", cfg.listen_ip, 41230);
-    zserver_start(cfg.listen_ip, 41230, cfg.psk, cfg.psk_len,
+    if (!cfg.listen_port)
+        cfg.listen_port = 41230;
+
+    printf("Listening on %s port %u\n", cfg.listen_ip, cfg.listen_port);
+    zserver_start(cfg.listen_ip, cfg.listen_port, cfg.psk, cfg.psk_len,
                   application_command_handler);
   } else {
     printf("Error: IP address to listen on not specified.");
