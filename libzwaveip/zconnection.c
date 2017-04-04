@@ -285,3 +285,8 @@ void zconncetion_set_endpoint(struct zconnection* connection,
                               uint8_t endpoint) {
   connection->remote_endpoint = endpoint;
 }
+
+void zconnection_get_remote_addr(struct zconnection *connection, struct sockaddr_storage *remote_addr) {
+  struct pass_info *info = (struct pass_info *)connection->info;
+  memcpy(remote_addr, &info->remote_addr, sizeof(struct sockaddr_storage));
+}

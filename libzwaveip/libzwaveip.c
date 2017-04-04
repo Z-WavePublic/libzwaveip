@@ -82,33 +82,7 @@ int cookie_initialized = 0;
 
 int user_data_index = -1;
 
-#define MAXPSK 64
 
-struct pass_info {
-  union {
-    struct sockaddr_storage ss;
-    struct sockaddr_in6 s6;
-    struct sockaddr_in s4;
-  } local_addr, remote_addr;
-  SSL *ssl;
-
-  int is_client;
-  int is_running;
-  struct zconnection connection;
-
-  int fd;
-  char psk[MAXPSK];
-  int psk_len;
-
-#if WIN32
-  WSADATA wsaData;
-  DWORD tid;
-#else
-  pthread_t tid;
-  pthread_cond_t handshake_cond;
-  pthread_mutex_t handshake_mutex;
-#endif
-};
 
 #if WIN32
 static HANDLE *mutex_buf = NULL;

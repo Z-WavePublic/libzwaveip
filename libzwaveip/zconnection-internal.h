@@ -24,6 +24,15 @@
 #define ZCONNECITON_INTERNAL_H_
 
 #include "zconnection.h"
+#ifdef WIN32
+#include <Ws2tcpip.h>
+#else
+#include <netinet/in.h>
+#endif
+#include <openssl/ssl.h>
+
+#define MAXPSK 64
+
 
 /**
  * Object holding the state between a Z/IP client and a Z/IP service.
@@ -58,6 +67,33 @@ struct zconnection {
 
   struct ima_data ima;
 };
+
+struct pass_info {
+  union {
+    struct sockaddr_storage ss;
+    struct sockaddr_in6 s6;
+    struct sockaddr_in s4;
+  } local_addr, remote_addr;
+  SSL *ssl;
+
+  int is_client;
+  int is_running;
+  struct zconnection connection;
+
+  int fd;
+  char psk[MAXPSK];
+  int psk_len;
+
+#if WIN32
+  WSADATA wsaData;
+  DWORD tid;
+#else
+  pthread_t tid;
+  pthread_cond_t handshake_cond;
+  pthread_mutex_t handshake_mutex;
+#endif
+};
+
 
 /**
  * Entry point for all packages into the client module
