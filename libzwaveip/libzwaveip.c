@@ -602,7 +602,7 @@ cleanup:
 #else
   close(fd);
 #endif
-  free(pinfo);
+
   SSL_free(ssl);
   ERR_remove_state(0);
   if (verbose) printf("Thread %lx: done, connection closed.\n", id_function());
@@ -761,14 +761,11 @@ struct zconnection *zclient_start(const char *remote_address, uint16_t port,
 #ifdef WIN32
   if (CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)connection_handle, info, 0,
                    &info->tid) == NULL) {
-    goto error
+    goto error;
   }
 #else
   if (pthread_create(&info->tid, NULL, connection_handle, info) != 0) {
     perror("pthread_create");
-    if (info) {
-      free(info);
-    }
     goto error;
   }
 #endif
@@ -776,18 +773,18 @@ struct zconnection *zclient_start(const char *remote_address, uint16_t port,
   pthread_cond_wait(&info->handshake_cond, &info->handshake_mutex);
   if (info->is_running) {
     return &info->connection;
-  } else {
-    pthread_join(info->tid, 0);
   }
+
+  pthread_join(info->tid, 0);
 
 /* Fall through */
 error:
+  free(info);
   return NULL;
 }
 
 void zclient_stop(struct zconnection *handle) {
   struct pass_info *info = (struct pass_info *)handle->info;
-  ;
 
   info->is_running = 0;
   pthread_cond_wait(&info->handshake_cond, &info->handshake_mutex);
@@ -799,6 +796,7 @@ void zclient_stop(struct zconnection *handle) {
    perror("zclient_stop");
   }*/
 
+  free(info);
   THREAD_cleanup();
 #ifdef WIN32
   WSACleanup();
