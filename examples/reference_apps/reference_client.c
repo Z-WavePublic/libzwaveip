@@ -44,6 +44,9 @@
 #include "command_completion.h"
 #include "zresource.h"
 #include <zw_cmd_tool.h>
+#include <limits.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
 #define BINARY_COMMAND_BUFFER_SIZE 2000
 #define MAX_ADDRESS_SIZE 100
@@ -52,6 +55,10 @@
 #define SECURITY_2_ACCESS_CLASS_KEY 0x04
 #define SECURITY_2_AUTHENTICATED_CLASS_KEY 0x02
 #define SECURITY_2_UNAUTHENTICATED_CLASS_KEY 0x01
+
+#ifndef DEFAULT_ZWAVE_CMD_CLASS_XML
+#define DEFAULT_ZWAVE_CMD_CLASS_XML "/usr/local/share/zwave/ZWave_custom_cmd_classes.xml"
+#endif
 
 static int running = 1;
 
@@ -64,6 +71,7 @@ struct app_config {
   uint8_t psk_len;
   char server_ip[200]; /* longest wellformed ipv6 text encoded is 39 bytes
                           long, this should suffice */
+  char xml_file_path[PATH_MAX];
 } cfg;
 
 static struct {
@@ -633,7 +641,7 @@ struct zconnection *zip_connect(const char *remote_addr) {
 void print_usage(void) {
   printf("\n");
   printf(
-      "Usage: reference_client [-p <pskkey>] -s <IP address of the Z/IP "
+      "Usage: reference_client [-p <pskkey>] [-x <zwave_xml_file>] -s <IP address of the Z/IP "
       "Gateway>\n");
   printf("\n");
   printf("NOTE: IP address can be both IPv4 or IPv6\n");
@@ -674,16 +682,26 @@ void parse_server_ip(struct app_config *cfg, char *optarg) {
   strncpy(cfg->server_ip, optarg, sizeof(cfg->server_ip));
 }
 
+void parse_xml_filename(struct app_config *cfg, char *optarg) {
+  struct stat _stat;
+  if (!stat(optarg, &_stat)) {
+    strcpy(cfg->xml_file_path, optarg);
+  }
+}
+
 static void parse_prog_args(int prog_argc, char **prog_argv) {
   int opt;
 
-  while ((opt = getopt(prog_argc, prog_argv, "p:s:")) != -1) {
+  while ((opt = getopt(prog_argc, prog_argv, "p:s:x:")) != -1) {
     switch (opt) {
       case 'p':
         parse_psk(&cfg, optarg);
         break;
       case 's':
         parse_server_ip(&cfg, optarg);
+        break;
+      case 'x':
+        parse_xml_filename(&cfg, optarg);
         break;
       default: /* '?' */
         print_usage();
@@ -711,7 +729,17 @@ int main(int argc, char **argv) {
     return -1;
   }
 
-  xml_filename = find_xml_file(argv[0]);
+  if (!*cfg.xml_file_path) {
+    // no user specified file - look for the default file in /etc/zipgateway.d
+    parse_xml_filename(&cfg, DEFAULT_ZWAVE_CMD_CLASS_XML);
+  }
+  if (*cfg.xml_file_path) {
+    // use the user specified file, or the default if it was found in the expected location
+    xml_filename = cfg.xml_file_path;
+  } else {
+    // fallback to looking in the same directory where the binary is located
+    xml_filename = find_xml_file(argv[0]);
+  }
   if (!initialize_xml(xml_filename)) {
     printf("Could not load Command Class definitions\n");
     return -1;
