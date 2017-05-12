@@ -24,6 +24,11 @@
 #define ZCONNECTION_H_
 
 #include <stdint.h>
+#ifdef WIN32
+#include <winsock2.h>
+#else
+#include <sys/socket.h>
+#endif
 #include <pthread.h>
 
 /**
@@ -126,6 +131,15 @@ void zconnection_set_transmit_done_func(struct zconnection* connection,
  * @param endpoint The desitination endpoint
  */
 void zconncetion_set_endpoint(struct zconnection* connection, uint8_t endpoint);
+
+
+/**
+ * Get the address of the remote node on the connection. This is used to identify the node
+ * that originated an unsolicited frame
+ * @param connection	The handle to the connection object
+ * @param remote_addr	A pointer to the buffer that will receive the remote endpoint information
+ */
+void zconnection_get_remote_addr(struct zconnection *connection, struct sockaddr_storage *remote_addr);
 
 /**
  * @}

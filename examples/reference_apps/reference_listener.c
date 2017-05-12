@@ -27,12 +27,21 @@
 #include "libzwaveip.h"
 #include "parse_xml.h"
 #include "util.h"
+#include <limits.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+
+#ifndef DEFAULT_ZWAVE_CMD_CLASS_XML
+#define DEFAULT_ZWAVE_CMD_CLASS_XML "/usr/local/share/zwave/ZWave_custom_cmd_classes.xml"
+#endif
 
 struct app_config {
   uint8_t psk[64];
   uint8_t psk_len;
   char listen_ip[200]; /* longest wellformed ipv6 text encoded is 39 bytes
                           long, this should suffice */
+  char xml_file_path[PATH_MAX];
+  uint16_t listen_port;
 } cfg;
 
 void application_command_handler(struct zconnection *connection,
@@ -67,7 +76,7 @@ static void print_usage(void) {
   printf("\n");
   printf(
       "Usage: reference_listner -l <IP address of interface to listen on> [-p "
-      "PSK]\n");
+      "PSK] [-o Port] [-x <zwave_xml_file>] \n");
   printf("\n");
   printf("NOTE: IP address can be both IPv4 or IPv6\n");
   printf("for example \n");
@@ -107,16 +116,35 @@ void parse_listen_ip(struct app_config *cfg, char *optarg) {
   strncpy(cfg->listen_ip, optarg, sizeof(cfg->listen_ip));
 }
 
+void parse_listen_port(struct app_config *cfg, char *optarg) {
+    printf("_-------%s\n", optarg);
+    cfg->listen_port = atoi(optarg);
+
+}
+
+void parse_xml_filename(struct app_config *cfg, char *optarg) {
+  struct stat _stat;
+  if (!stat(optarg, &_stat)) {
+    strcpy(cfg->xml_file_path, optarg);
+  }
+}
+
 static void parse_prog_args(int prog_argc, char **prog_argv) {
   int opt;
 
-  while ((opt = getopt(prog_argc, prog_argv, "p:l:")) != -1) {
+  while ((opt = getopt(prog_argc, prog_argv, "p:l:o:x:")) != -1) {
     switch (opt) {
       case 'p':
         parse_psk(&cfg, optarg);
         break;
       case 'l':
         parse_listen_ip(&cfg, optarg);
+        break;
+      case 'x':
+        parse_xml_filename(&cfg, optarg);
+        break;
+      case 'o':
+        parse_listen_port(&cfg, optarg); 
         break;
       default: /* '?' */
         print_usage();
@@ -134,7 +162,18 @@ int main(int argc, char **argv) {
   parse_prog_args(argc, argv);
 
   if (strlen(cfg.listen_ip) > 0) {
-    xml_filename = find_xml_file(argv[0]);
+    if (!*cfg.xml_file_path) {
+      // no user specified file - look for the default file in /etc/zipgateway.d
+      parse_xml_filename(&cfg, DEFAULT_ZWAVE_CMD_CLASS_XML);
+    }
+    if (*cfg.xml_file_path) {
+      // use the user specified file, or the default if it was found in the expected location
+      xml_filename = cfg.xml_file_path;
+    } else {
+      // fallback to looking in the same directory where the binary is located
+      xml_filename = find_xml_file(argv[0]);
+    }
+
     if (!initialize_xml(xml_filename)) {
       printf("Could not load Command Class definitions\n");
       return -1;
@@ -146,8 +185,11 @@ int main(int argc, char **argv) {
       printf("PSK not configured - using default\n");
     }
 
-    printf("Listening on %s port %u\n", cfg.listen_ip, 41230);
-    zserver_start(cfg.listen_ip, 41230, cfg.psk, cfg.psk_len,
+    if (!cfg.listen_port)
+        cfg.listen_port = 41230;
+
+    printf("Listening on %s port %u\n", cfg.listen_ip, cfg.listen_port);
+    zserver_start(cfg.listen_ip, cfg.listen_port, cfg.psk, cfg.psk_len,
                   application_command_handler);
   } else {
     printf("Error: IP address to listen on not specified.");

@@ -8,6 +8,7 @@ $ brew install cmake openssl doxygen
 $ git clone https://github.com/Z-WavePublic/libzwaveip.git
 $ cd libzwaveip
 $ mkdir build
+$ cd build
 $ cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl/ -DOPENSSL_LIBRARIES=/usr/local/opt/openssl/lib/ ..
 $ make
 ```
