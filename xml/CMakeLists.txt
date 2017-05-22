@@ -14,7 +14,7 @@ add_custom_command(OUTPUT zw_gen_hdr.c
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-add_library(parse_xml parse_xml.c)
+add_library(zw_parse_xml parse_xml.c)
 add_library(zw_cmd_tool zw_cmd_tool.c  zw_gen_hdr.c )
 
 
@@ -24,4 +24,5 @@ set (zwaveip_xml_headers
 install (FILES ${zwaveip_xml_headers} DESTINATION include/zwaveip)
 
 install (TARGETS zw_cmd_tool DESTINATION lib)
+install (TARGETS zw_parse_xml DESTINATION lib)
 
