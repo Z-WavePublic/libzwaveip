@@ -12,6 +12,10 @@ find_library(AVAHI_LIBRARY-COMMON NAMES avahi-common)
 find_library(AVAHI_LIBRARY-CLIENT NAMES avahi-client)
 
 if(AVAHI_LIBRARY-CLIENT)
+  message(STATUS "Enabling MDNS...")
+  message(STATUS "  avahi-common found =>" "${AVAHI_LIBRARY-COMMON}")
+  message(STATUS "  avahi-client found =>" "${AVAHI_LIBRARY-CLIENT}")
+
   add_definitions(-DWITH_MDNS)
   set(MDNS_LIBS ${AVAHI_LIBRARY-COMMON} ${AVAHI_LIBRARY-CLIENT})
 endif()
