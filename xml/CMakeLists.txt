@@ -20,6 +20,7 @@ add_library(zw_cmd_tool zw_cmd_tool.c  zw_gen_hdr.c )
 
 set (zwaveip_xml_headers
   zw_cmd_tool.h
+  parse_xml.h
 )
 install (FILES ${zwaveip_xml_headers} DESTINATION include/zwaveip)
 
