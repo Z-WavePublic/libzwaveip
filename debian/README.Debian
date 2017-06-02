@@ -1,6 +1,6 @@
-matrix-creator-hal for Debian
+libzwaveip for Debian
 -------------------------------
 
-MATRIX Hardware Abstraction Layer.
+libzwaveip makes it easy to control Z-Wave devices from your IP network via a Z/IP Gateway. A Z/IP Gateway binary for Raspberry Pi is available here: http://zwavepublic.com/developer.
 
--- Admobilize <info@admobilize.com> Tue, 16 Feb 2017 10:00:57 -0800
+-- Sigma Designs <webmaster@sigmadesigns.com> Tue, 16 Feb 2017 10:00:57 -0800

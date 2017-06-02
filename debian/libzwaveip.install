@@ -1,1 +1,2 @@
-debian/tmp/usr/lib/libmatrix_creator_hal.a usr/lib
+debian/tmp/usr/lib/*.a usr/lib
+
