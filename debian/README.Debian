@@ -1,4 +1,4 @@
-libzwaveip for Debian
+Unofficial libzwaveip for Debian
 -------------------------------
 
 libzwaveip unofficial debian package. libzwaveip makes it easy to control Z-Wave devices from your IP network via a Z/IP Gateway. A Z/IP Gateway binary for Raspberry Pi is available here: http://zwavepublic.com/developer.
