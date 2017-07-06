@@ -4,8 +4,7 @@ cmake_minimum_required(VERSION 2.9)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 #add_definitions(-Wall -Werror)
-#set(CMAKE_C_FLAGS "-std=gnu99")
-set(CMAKE_C_FLAGS "-std=gnu99 -g -DDEBUG")
+set(CMAKE_C_FLAGS "-std=gnu99")
 
 find_package(OpenSSL REQUIRED 1.0.1)
 

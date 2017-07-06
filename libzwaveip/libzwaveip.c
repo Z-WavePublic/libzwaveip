@@ -508,7 +508,9 @@ void *connection_handle(void *info) {
 
   pinfo->is_running = 1;
 
+  pthread_mutex_lock(&pinfo->handshake_mutex);
   pthread_cond_signal(&pinfo->handshake_cond);
+  pthread_mutex_unlock(&pinfo->handshake_mutex);
 
   while (!(SSL_get_shutdown(ssl) & SSL_RECEIVED_SHUTDOWN) &&
          num_timeouts < max_timeouts && pinfo->is_running) {
@@ -744,7 +746,10 @@ struct zconnection *zclient_start(const char *remote_address, uint16_t port,
   }
 #endif
 
+  pthread_mutex_lock(&info->handshake_mutex);
   pthread_cond_wait(&info->handshake_cond, &info->handshake_mutex);
+  pthread_mutex_unlock(&info->handshake_mutex);
+
   if (info->is_running) {
     return &info->connection;
   }
