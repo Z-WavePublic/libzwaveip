@@ -4,25 +4,27 @@ cmake_minimum_required(VERSION 2.9)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/")
 
 #add_definitions(-Wall -Werror)
-set(CMAKE_C_FLAGS "-std=gnu99")
+#set(CMAKE_C_FLAGS "-std=gnu99")
+set(CMAKE_C_FLAGS "-std=gnu99 -g -DDEBUG")
 
 find_package(OpenSSL REQUIRED 1.0.1)
 
 find_library(AVAHI_LIBRARY-COMMON NAMES avahi-common)
 find_library(AVAHI_LIBRARY-CLIENT NAMES avahi-client)
+find_path(AVAHI_CLIENT_INCLUDE_DIR avahi-client/client.h)
 
 if(AVAHI_LIBRARY-CLIENT)
   add_definitions(-DWITH_MDNS)
   set(MDNS_LIBS ${AVAHI_LIBRARY-COMMON} ${AVAHI_LIBRARY-CLIENT})
 endif()
 
-include_directories(include/ ${OPENSSL_INCLUDE_DIR} xml/ libedit/) 
+find_package(LibXml2)
+
+include_directories(include/ ${OPENSSL_INCLUDE_DIR} ${AVAHI_CLIENT_INCLUDE_DIR} ${LIBXML_INCLUDE_DIR} xml/ libedit/)
 add_subdirectory( libzwaveip )
 add_subdirectory( xml )
 add_subdirectory( libedit )
 add_subdirectory( examples )
-
-find_package(LibXml2)
 
 find_package(Doxygen)
 IF (NOT DOXYGEN_FOUND)
