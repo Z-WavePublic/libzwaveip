@@ -48,7 +48,7 @@ __RCSID("$NetBSD: history.c,v 1.57 2016/04/11 18:56:31 christos Exp $");
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
-#if (defined(__APPLE__) && defined(__MACH__))
+#if (defined(__APPLE__) && defined(__MACH__)) || defined(__FreeBSD__)
 #include <vis.h>
 #else
 #include <bsd/vis.h>

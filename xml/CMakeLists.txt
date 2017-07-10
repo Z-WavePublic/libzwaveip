@@ -1,6 +1,6 @@
 add_subdirectory( test )
 include_directories( . )
-include_directories( "/usr/include/libxml2/" )
+include_directories(${LIBXML2_INCLUDE_DIR})
 
 include(FindPythonInterp)
 find_package(LibXml2)

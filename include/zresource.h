@@ -23,6 +23,9 @@
 #ifndef ZRESOURCE_H_
 #define ZRESOURCE_H_
 
+#include <sys/types.h>
+#include <sys/socket.h>
+
 #include <stdint.h>
 #include <netinet/in.h>
 #include <netinet/ip6.h>
