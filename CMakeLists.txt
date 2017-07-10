@@ -13,13 +13,17 @@ find_library(AVAHI_LIBRARY-CLIENT NAMES avahi-client)
 find_path(AVAHI_CLIENT_INCLUDE_DIR avahi-client/client.h)
 
 if(AVAHI_LIBRARY-CLIENT)
-  add_definitions(-DWITH_MDNS)
-  set(MDNS_LIBS ${AVAHI_LIBRARY-COMMON} ${AVAHI_LIBRARY-CLIENT})
+    add_definitions(-DWITH_MDNS)
+    set(MDNS_LIBS ${AVAHI_LIBRARY-COMMON} ${AVAHI_LIBRARY-CLIENT})
+    include_directories(${AVAHI_CLIENT_INCLUDE_DIR})
+elseif(APPLE)
+    # macOS has mDNS support built-in
+    add_definitions(-DWITH_MDNS)
 endif()
 
 find_package(LibXml2)
 
-include_directories(include/ ${OPENSSL_INCLUDE_DIR} ${AVAHI_CLIENT_INCLUDE_DIR} ${LIBXML_INCLUDE_DIR} xml/ libedit/)
+include_directories(include/ ${OPENSSL_INCLUDE_DIR} ${LIBXML_INCLUDE_DIR} xml/ libedit/)
 add_subdirectory( libzwaveip )
 add_subdirectory( xml )
 add_subdirectory( libedit )
