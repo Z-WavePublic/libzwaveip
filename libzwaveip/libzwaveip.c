@@ -380,8 +380,10 @@ void *connection_handle(void *info) {
   pthread_detach(pthread_self());
 #endif
 
-  OPENSSL_assert(pinfo->remote_addr.ss.ss_family ==
-                 pinfo->local_addr.ss.ss_family);
+  if (!(pinfo->remote_addr.ss.ss_family == pinfo->local_addr.ss.ss_family)) {
+    goto cleanup;
+  }
+
   fd = socket(pinfo->remote_addr.ss.ss_family, SOCK_DGRAM, 0);
   if (fd < 0) {
     perror("socket");
@@ -419,21 +421,32 @@ void *connection_handle(void *info) {
       if (bind(fd, (const struct sockaddr *)&pinfo->local_addr,
                sizeof(struct sockaddr_in)) < 0) {
         perror("bind");
+        goto cleanup;
       }
       if (connect(fd, (struct sockaddr *)&pinfo->remote_addr,
                   sizeof(struct sockaddr_in)) < 0) {
         perror("connect");
+        goto cleanup;
       }
       break;
+
     case AF_INET6:
       setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&off, sizeof(off));
-      bind(fd, (const struct sockaddr *)&pinfo->local_addr,
-           sizeof(struct sockaddr_in6));
-      connect(fd, (struct sockaddr *)&pinfo->remote_addr,
-              sizeof(struct sockaddr_in6));
+
+      if (bind(fd, (const struct sockaddr *)&pinfo->local_addr,
+           sizeof(struct sockaddr_in6)) < 0) {
+          perror("bind");
+          goto cleanup;
+      }
+      if (connect(fd, (struct sockaddr *)&pinfo->remote_addr,
+              sizeof(struct sockaddr_in6)) < 0) {
+          perror("connect");
+          goto cleanup;
+      }
       break;
+
     default:
-      OPENSSL_assert(0);
+      goto cleanup;
       break;
   }
 
@@ -506,9 +519,8 @@ void *connection_handle(void *info) {
     goto cleanup;
   }
 
-  pinfo->is_running = 1;
-
   pthread_mutex_lock(&pinfo->handshake_mutex);
+  pinfo->is_running = 1;
   pthread_cond_signal(&pinfo->handshake_cond);
   pthread_mutex_unlock(&pinfo->handshake_mutex);
 
@@ -565,13 +577,13 @@ void *connection_handle(void *info) {
           break;
       }
     }
+
   }
 
 cleanup:
 
   SSL_shutdown(ssl);
 
-  pinfo->is_running = 0;
 
 #ifdef WIN32
   closesocket(fd);
@@ -584,9 +596,15 @@ cleanup:
   if (verbose) printf("Thread %lx: done, connection closed.\n", id_function());
 #if WIN32
   ExitThread(0);
+  return 0;
 #else
+  pthread_mutex_lock(&pinfo->handshake_mutex);
+  pinfo->is_running = 0;
   pthread_cond_signal(&pinfo->handshake_cond);
+  pthread_mutex_unlock(&pinfo->handshake_mutex);
+
   pthread_exit((void *)NULL);
+  return NULL;
 #endif
 }
 
@@ -747,7 +765,9 @@ struct zconnection *zclient_start(const char *remote_address, uint16_t port,
 #endif
 
   pthread_mutex_lock(&info->handshake_mutex);
-  pthread_cond_wait(&info->handshake_cond, &info->handshake_mutex);
+  if (info->is_running == 0) {
+	  pthread_cond_wait(&info->handshake_cond, &info->handshake_mutex);
+  }
   pthread_mutex_unlock(&info->handshake_mutex);
 
   if (info->is_running) {
@@ -765,8 +785,10 @@ error:
 void zclient_stop(struct zconnection *handle) {
   struct pass_info *info = (struct pass_info *)handle->info;
 
+  pthread_mutex_lock(&info->handshake_mutex);
   info->is_running = 0;
   pthread_cond_wait(&info->handshake_cond, &info->handshake_mutex);
+  pthread_mutex_unlock(&info->handshake_mutex);
 
   // TODO Normally I would use this instead of pthread_cond_wait, but the join
   // call fails...
