@@ -150,13 +150,22 @@ static int THREAD_cleanup() {
   return 1;
 }
 
+static pthread_mutex_t ssl_init_lock = PTHREAD_MUTEX_INITIALIZER;
+static int ssl_init_done = 0;
+
 static void openssl_init() {
-  if (user_data_index == -1) {
-    THREAD_setup();
-    OpenSSL_add_ssl_algorithms();
-    SSL_load_error_strings();
-    user_data_index = SSL_get_ex_new_index(0, "pinfo index", NULL, NULL, NULL);
+
+  pthread_mutex_lock(&ssl_init_lock);
+  if (ssl_init_done == 0) {
+	  if (user_data_index == -1) {
+		THREAD_setup();
+		OpenSSL_add_ssl_algorithms();
+		SSL_load_error_strings();
+		user_data_index = SSL_get_ex_new_index(0, "pinfo index", NULL, NULL, NULL);
+	  }
+	  ssl_init_done = 1;
   }
+  pthread_mutex_unlock(&ssl_init_lock);
 }
 
 static int handle_socket_error() {
