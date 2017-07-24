@@ -631,6 +631,8 @@ cleanup:
 #else
   close(fd);
 #endif
+  close(self_pipe[0]);
+  close(self_pipe[1]);
 
   SSL_free(ssl);
   ERR_remove_state(0);
