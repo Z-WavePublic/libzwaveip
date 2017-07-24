@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * test.c
+ * reference_client.c
  *
  *  Created on: May 23, 2016
  *      Author: aes
