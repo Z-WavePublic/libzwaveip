@@ -384,9 +384,6 @@ static void _cmd_send(const char *dest_address, char **input_tokens) {
       zclient_stop(conn_context.pan_connection);
       conn_context.pan_connection = 0;
     }
-    /* FIXME: Use thread synchronization instead of sleep to avoid "Socket Read
-     * Error" */
-    sleep(1);
     conn_context.pan_connection = zip_connect(dest_address);
   }
   if (!conn_context.pan_connection) {
@@ -395,7 +392,6 @@ static void _cmd_send(const char *dest_address, char **input_tokens) {
     return;
   }
   strncpy(conn_context.dest_addr, dest_address, sizeof(conn_context.dest_addr));
-  sleep(1);
   zconnection_set_transmit_done_func(conn_context.pan_connection,
                                      transmit_done_pan);
   if (zconnection_send_async(conn_context.pan_connection, binary_command,
@@ -429,9 +425,6 @@ static void _cmd_hexsend(const char *dest_address, const char *input) {
       zclient_stop(conn_context.pan_connection);
       conn_context.pan_connection = 0;
     }
-    /* FIXME: Use thread synchronization instead of sleep to avoid "Socket Read
-     * Error" */
-    sleep(1);
     conn_context.pan_connection = zip_connect(dest_address);
   }
   if (!conn_context.pan_connection) {
@@ -440,7 +433,6 @@ static void _cmd_hexsend(const char *dest_address, const char *input) {
     return;
   }
   strncpy(conn_context.dest_addr, dest_address, sizeof(conn_context.dest_addr));
-  sleep(1);
   zconnection_set_transmit_done_func(conn_context.pan_connection,
                                      transmit_done_pan);
   if (zconnection_send_async(conn_context.pan_connection, binary_command,

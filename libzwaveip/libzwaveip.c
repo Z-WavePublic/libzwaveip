@@ -554,12 +554,34 @@ void *connection_handle(void *info) {
           /* Handle socket timeouts */
           if (BIO_ctrl(SSL_get_rbio(ssl), BIO_CTRL_DGRAM_GET_RECV_TIMER_EXP, 0,
                        NULL)) {
-            num_timeouts++;
-            if (pinfo->is_client && num_timeouts > 25 * 10) {
-              zconnection_send_keepalive(&pinfo->connection);
-              num_timeouts = 0;
+            // Wait up to 5 seconds for incoming data before retrying.
+            struct timeval timeout;
+            timeout.tv_sec = 5;
+            timeout.tv_usec = 0;
+
+            // Create an 'fd_set' that has only the fd being used by OpenSSL.
+            int ssl_fd = SSL_get_rfd(ssl);
+            fd_set fds;
+            FD_ZERO(&fds);
+            FD_SET(ssl_fd, &fds);
+
+            int err = select(ssl_fd + 1, &fds, NULL, NULL, &timeout);
+            // Check if more data is available for reading.
+            if (err > 0) { continue; }
+
+            if (err == 0) {
+              // 'Ping' the 'server' with a keep-alive message after ~30
+              // seconds of inactivity.
+              num_timeouts++;
+              if (pinfo->is_client && num_timeouts > 5) {
+                zconnection_send_keepalive(&pinfo->connection);
+                num_timeouts = 0;
+              }
+              zconnection_timer_100ms(&pinfo->connection);
+            } else {
+              printf("Error in 'select' while reading: %d\n", errno);
+              goto cleanup;
             }
-            zconnection_timer_100ms(&pinfo->connection);
             reading = 0;
           }
           /* Just try again */
