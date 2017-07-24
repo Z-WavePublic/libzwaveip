@@ -529,7 +529,14 @@ void *connection_handle(void *info) {
   }
 
   pthread_mutex_lock(&pinfo->handshake_mutex);
+
   pinfo->is_running = 1;
+
+  // Store a self-pipe in pass_info's 'fd'.
+  int self_pipe[2];
+  pipe(self_pipe);
+  pinfo->fd = self_pipe[1];
+
   pthread_cond_signal(&pinfo->handshake_cond);
   pthread_mutex_unlock(&pinfo->handshake_mutex);
 
@@ -559,13 +566,16 @@ void *connection_handle(void *info) {
             timeout.tv_sec = 5;
             timeout.tv_usec = 0;
 
-            // Create an 'fd_set' that has only the fd being used by OpenSSL.
-            int ssl_fd = SSL_get_rfd(ssl);
+            // Create an 'fd_set' that has only the fd being used by OpenSSL and
+            // a self-pipe used when signaling a shut down.
             fd_set fds;
             FD_ZERO(&fds);
-            FD_SET(ssl_fd, &fds);
+            FD_SET(fd, &fds);
+            FD_SET(self_pipe[0], &fds);
 
-            int err = select(ssl_fd + 1, &fds, NULL, NULL, &timeout);
+            int err = select(self_pipe[0] + 1, &fds, NULL, NULL, &timeout);
+            // Check if thread should still be running.
+            if (pinfo->is_running == 0) { goto cleanup; }
             // Check if more data is available for reading.
             if (err > 0) { continue; }
 
@@ -817,7 +827,12 @@ void zclient_stop(struct zconnection *handle) {
   struct pass_info *info = (struct pass_info *)handle->info;
 
   pthread_mutex_lock(&info->handshake_mutex);
+
   info->is_running = 0;
+
+  // 'Poke' the self-pipe stored in pass_info to signal a shut down.
+  write(info->fd, (char[10]){ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, 10);
+
   pthread_cond_wait(&info->handshake_cond, &info->handshake_mutex);
   pthread_mutex_unlock(&info->handshake_mutex);
 
