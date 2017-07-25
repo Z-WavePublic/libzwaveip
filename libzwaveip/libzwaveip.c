@@ -385,6 +385,11 @@ void *connection_handle(void *info) {
   struct timeval timeout;
   int num_timeouts = 0, max_timeouts = 30 * 10;
 
+  // Store a self-pipe in pass_info's 'fd'.
+  int self_pipe[2];
+  pipe(self_pipe);
+  pinfo->fd = self_pipe[1];
+
 #ifndef WIN32
   pthread_detach(pthread_self());
 #endif
@@ -532,11 +537,6 @@ void *connection_handle(void *info) {
 
   pinfo->is_running = 1;
 
-  // Store a self-pipe in pass_info's 'fd'.
-  int self_pipe[2];
-  pipe(self_pipe);
-  pinfo->fd = self_pipe[1];
-
   pthread_cond_signal(&pinfo->handshake_cond);
   pthread_mutex_unlock(&pinfo->handshake_mutex);
 
@@ -573,7 +573,8 @@ void *connection_handle(void *info) {
             FD_SET(fd, &fds);
             FD_SET(self_pipe[0], &fds);
 
-            int err = select(self_pipe[0] + 1, &fds, NULL, NULL, &timeout);
+            int err = select((self_pipe[0] > fd ? self_pipe[0] : fd) + 1,
+                             &fds, NULL, NULL, &timeout);
             // Check if thread should still be running.
             if (pinfo->is_running == 0) { goto cleanup; }
             // Check if more data is available for reading.
