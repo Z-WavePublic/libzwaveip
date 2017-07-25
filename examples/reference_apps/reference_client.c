@@ -476,23 +476,32 @@ static void cmd_send(const char *input) {
     service_name[strlen(service_name) - 1] = 0; /* strip closing quote */
   }
   for (n = zresource_get(); n; n = n->next) {
-    if (0 == strcmp(n->service_name, service_name)) {
-      const char *result;
-      /* Try connecting via IPv6 first */
-      result = inet_ntop(n->addr6.sin6_family, &n->addr6.sin6_addr, addr_str,
-                         sizeof(struct sockaddr_in6));
-      if (NULL == result) {
-        /* fallback to IPv4 */
-        result = inet_ntop(n->addr.sin_family, &n->addr.sin_addr, addr_str,
-                           sizeof(struct sockaddr_in));
-        if (NULL == result) {
-          printf("Invalid destination address.\n");
-          break;
-        }
-      }
-      _cmd_send(addr_str, &tokens[2]);
+    if (0 != strcmp(n->service_name, service_name)) { continue; }
+
+    const char *result;
+    /* Try connecting via IPv6 first */
+    result = inet_ntop(n->addr6.sin6_family, &n->addr6.sin6_addr, addr_str,
+                       sizeof(struct sockaddr_in6));
+
+    int ipv6_send_outcome = CMD_SEND_OK;
+    if ((NULL != result)
+        && (CMD_SEND_OK == (ipv6_send_outcome =
+                            _cmd_send(addr_str, &tokens[2])))) { break; }
+
+    // Skip IPv4 connection attempt if the previous failure was related to the
+    // arguments passed.
+    if (CMD_SEND_ERR_ARG == ipv6_send_outcome) { break; }
+
+    /* fallback to IPv4 */
+    if (NULL != result) { printf("Falling back to IPv4...\n"); }
+    result = inet_ntop(n->addr.sin_family, &n->addr.sin_addr, addr_str,
+                       sizeof(struct sockaddr_in));
+    if (NULL == result) {
+      printf("Invalid destination address.\n");
       break;
     }
+    _cmd_send(addr_str, &tokens[2]);
+    break;
   }
 cleanup:
   free_tokenlist(tokens);
