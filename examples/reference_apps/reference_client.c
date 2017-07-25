@@ -324,12 +324,19 @@ static int max(int x, int y) {
   return y;
 }
 
+typedef enum {
+  CMD_SEND_OK =          0,
+  CMD_SEND_ERR_ARG =    -1,
+  CMD_SEND_ERR_CONN =   -2,
+  CMD_SEND_ERR_BUSY =   -3
+} cmd_send_status;
+
 /**
- * \param Destination address of PAN node to receive command.
+ * \param dest_address address of PAN node to receive command.
  * \param[in] input_tokens A tokenlist of input commands. Freed by caller. First
  * token is Command Class.
  */
-static void _cmd_send(const char *dest_address, char **input_tokens) {
+static cmd_send_status _cmd_send(const char *dest_address, char **input_tokens) {
   unsigned char binary_command[BINARY_COMMAND_BUFFER_SIZE];
   unsigned int binary_command_len;
   unsigned char *p;
@@ -338,7 +345,7 @@ static void _cmd_send(const char *dest_address, char **input_tokens) {
 
   if (token_count(input_tokens) < 2) {
     printf("Too few arguments\n.");
-    return;
+    return CMD_SEND_ERR_ARG;
   }
 
   /* Compose binary command from symbolic names using XML encoder */
@@ -347,7 +354,7 @@ static void _cmd_send(const char *dest_address, char **input_tokens) {
 
   if (!p_class || !p_cmd) {
     printf("ERROR: command class name or command name not found\n");
-    return;
+    return CMD_SEND_ERR_ARG;
   }
 
   memset(binary_command, 0, BINARY_COMMAND_BUFFER_SIZE);
@@ -360,7 +367,7 @@ static void _cmd_send(const char *dest_address, char **input_tokens) {
         asciihex_to_bin(input_tokens[2], p, BINARY_COMMAND_BUFFER_SIZE);
     if (additional_binary_len < 0) {
       printf("Syntax error in argument 3\n");
-      return;
+      return CMD_SEND_ERR_ARG;
     }
     binary_command_len += additional_binary_len;
   }
@@ -371,13 +378,13 @@ static void _cmd_send(const char *dest_address, char **input_tokens) {
 
   if (0 == binary_command_len) {
     fprintf(stderr, "Zero-length command not sent\n");
-    return;
+    return CMD_SEND_ERR_ARG;
   }
 
   // ipOfNode(dest_nodeid, dest_address, sizeof(dest_address));
   if (0 != conn_context.pan_connection_busy) {
     printf("Busy, cannot send right now.\n");
-    return;
+    return CMD_SEND_ERR_BUSY;
   }
   if (strcmp(dest_address, conn_context.dest_addr)) {
     if (conn_context.pan_connection) {
@@ -389,7 +396,7 @@ static void _cmd_send(const char *dest_address, char **input_tokens) {
   if (!conn_context.pan_connection) {
     fprintf(stderr, "Failed to connect to PAN node\n");
     conn_context.dest_addr[0] = 0;
-    return;
+    return CMD_SEND_ERR_CONN;
   }
   strncpy(conn_context.dest_addr, dest_address, sizeof(conn_context.dest_addr));
   zconnection_set_transmit_done_func(conn_context.pan_connection,
@@ -397,7 +404,8 @@ static void _cmd_send(const char *dest_address, char **input_tokens) {
   if (zconnection_send_async(conn_context.pan_connection, binary_command,
                              binary_command_len, 0)) {
     conn_context.pan_connection_busy = 1;
-  }
+    return CMD_SEND_OK;
+  } else { return CMD_SEND_ERR_CONN; }
 }
 
 static void _cmd_hexsend(const char *dest_address, const char *input) {
