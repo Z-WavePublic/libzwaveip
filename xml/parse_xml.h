@@ -24,7 +24,7 @@
 int initialize_xml(const char *xml_filename);
 
 /* Deinitialize the previously initialized xml */
-int deinitialize_xml();
+void deinitialize_xml(void);
 
 /* Decode function. This will get a byte stream as input and expect number of
 strings in return explaining the value of each field

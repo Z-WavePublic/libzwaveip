@@ -1006,6 +1006,7 @@ uint8_t get_cmd_number(const char *cmd_class, const char *cmd,
       }
     }
   }
+  return 0;
 }
 
 int get_cmd_class_name(uint8_t number, char *r_name, uint8_t r_len) {
@@ -1150,7 +1151,7 @@ int initialize_xml(const char *xml_filename) {
   return 1;
 }
 
-int deinitialize_xml() {
+void deinitialize_xml() {
   /*free the document */
   if (doc) xmlFreeDoc(doc);
 }
