@@ -253,7 +253,7 @@ int decode(uint8_t *input, uint8_t no_of_bytes,
   uint8_t paramoffs;
   xmlNodePtr cmd_i, param_i, ptype_i, f, vg = NULL;
   struct cc *cc_i;
-  char a_number[4];
+  char a_number[5];
   xmlChar *version;
   int line_no = 0, j = 0;
   int i;
