@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 /*
- * test.c
+ * reference_client.c
  *
  *  Created on: May 23, 2016
  *      Author: aes
@@ -324,12 +324,19 @@ static int max(int x, int y) {
   return y;
 }
 
+typedef enum {
+  CMD_SEND_OK =          0,
+  CMD_SEND_ERR_ARG =    -1,
+  CMD_SEND_ERR_CONN =   -2,
+  CMD_SEND_ERR_BUSY =   -3
+} cmd_send_status;
+
 /**
- * \param Destination address of PAN node to receive command.
+ * \param dest_address address of PAN node to receive command.
  * \param[in] input_tokens A tokenlist of input commands. Freed by caller. First
  * token is Command Class.
  */
-static void _cmd_send(const char *dest_address, char **input_tokens) {
+static cmd_send_status _cmd_send(const char *dest_address, char **input_tokens) {
   unsigned char binary_command[BINARY_COMMAND_BUFFER_SIZE];
   unsigned int binary_command_len;
   unsigned char *p;
@@ -338,7 +345,7 @@ static void _cmd_send(const char *dest_address, char **input_tokens) {
 
   if (token_count(input_tokens) < 2) {
     printf("Too few arguments\n.");
-    return;
+    return CMD_SEND_ERR_ARG;
   }
 
   /* Compose binary command from symbolic names using XML encoder */
@@ -347,7 +354,7 @@ static void _cmd_send(const char *dest_address, char **input_tokens) {
 
   if (!p_class || !p_cmd) {
     printf("ERROR: command class name or command name not found\n");
-    return;
+    return CMD_SEND_ERR_ARG;
   }
 
   memset(binary_command, 0, BINARY_COMMAND_BUFFER_SIZE);
@@ -360,7 +367,7 @@ static void _cmd_send(const char *dest_address, char **input_tokens) {
         asciihex_to_bin(input_tokens[2], p, BINARY_COMMAND_BUFFER_SIZE);
     if (additional_binary_len < 0) {
       printf("Syntax error in argument 3\n");
-      return;
+      return CMD_SEND_ERR_ARG;
     }
     binary_command_len += additional_binary_len;
   }
@@ -371,37 +378,34 @@ static void _cmd_send(const char *dest_address, char **input_tokens) {
 
   if (0 == binary_command_len) {
     fprintf(stderr, "Zero-length command not sent\n");
-    return;
+    return CMD_SEND_ERR_ARG;
   }
 
   // ipOfNode(dest_nodeid, dest_address, sizeof(dest_address));
   if (0 != conn_context.pan_connection_busy) {
     printf("Busy, cannot send right now.\n");
-    return;
+    return CMD_SEND_ERR_BUSY;
   }
   if (strcmp(dest_address, conn_context.dest_addr)) {
     if (conn_context.pan_connection) {
       zclient_stop(conn_context.pan_connection);
       conn_context.pan_connection = 0;
     }
-    /* FIXME: Use thread synchronization instead of sleep to avoid "Socket Read
-     * Error" */
-    sleep(1);
     conn_context.pan_connection = zip_connect(dest_address);
   }
   if (!conn_context.pan_connection) {
     fprintf(stderr, "Failed to connect to PAN node\n");
     conn_context.dest_addr[0] = 0;
-    return;
+    return CMD_SEND_ERR_CONN;
   }
   strncpy(conn_context.dest_addr, dest_address, sizeof(conn_context.dest_addr));
-  sleep(1);
   zconnection_set_transmit_done_func(conn_context.pan_connection,
                                      transmit_done_pan);
   if (zconnection_send_async(conn_context.pan_connection, binary_command,
                              binary_command_len, 0)) {
     conn_context.pan_connection_busy = 1;
-  }
+    return CMD_SEND_OK;
+  } else { return CMD_SEND_ERR_CONN; }
 }
 
 static void _cmd_hexsend(const char *dest_address, const char *input) {
@@ -429,9 +433,6 @@ static void _cmd_hexsend(const char *dest_address, const char *input) {
       zclient_stop(conn_context.pan_connection);
       conn_context.pan_connection = 0;
     }
-    /* FIXME: Use thread synchronization instead of sleep to avoid "Socket Read
-     * Error" */
-    sleep(1);
     conn_context.pan_connection = zip_connect(dest_address);
   }
   if (!conn_context.pan_connection) {
@@ -440,7 +441,6 @@ static void _cmd_hexsend(const char *dest_address, const char *input) {
     return;
   }
   strncpy(conn_context.dest_addr, dest_address, sizeof(conn_context.dest_addr));
-  sleep(1);
   zconnection_set_transmit_done_func(conn_context.pan_connection,
                                      transmit_done_pan);
   if (zconnection_send_async(conn_context.pan_connection, binary_command,
@@ -476,23 +476,32 @@ static void cmd_send(const char *input) {
     service_name[strlen(service_name) - 1] = 0; /* strip closing quote */
   }
   for (n = zresource_get(); n; n = n->next) {
-    if (0 == strcmp(n->service_name, service_name)) {
-      const char *result;
-      /* Try connecting via IPv6 first */
-      result = inet_ntop(n->addr6.sin6_family, &n->addr6.sin6_addr, addr_str,
-                         sizeof(struct sockaddr_in6));
-      if (NULL == result) {
-        /* fallback to IPv4 */
-        result = inet_ntop(n->addr.sin_family, &n->addr.sin_addr, addr_str,
-                           sizeof(struct sockaddr_in));
-        if (NULL == result) {
-          printf("Invalid destination address.\n");
-          break;
-        }
-      }
-      _cmd_send(addr_str, &tokens[2]);
+    if (0 != strcmp(n->service_name, service_name)) { continue; }
+
+    const char *result;
+    /* Try connecting via IPv6 first */
+    result = inet_ntop(n->addr6.sin6_family, &n->addr6.sin6_addr, addr_str,
+                       sizeof(struct sockaddr_in6));
+
+    int ipv6_send_outcome = CMD_SEND_OK;
+    if ((NULL != result)
+        && (CMD_SEND_OK == (ipv6_send_outcome =
+                            _cmd_send(addr_str, &tokens[2])))) { break; }
+
+    // Skip IPv4 connection attempt if the previous failure was related to the
+    // arguments passed.
+    if (CMD_SEND_ERR_ARG == ipv6_send_outcome) { break; }
+
+    /* fallback to IPv4 */
+    if (NULL != result) { printf("Falling back to IPv4...\n"); }
+    result = inet_ntop(n->addr.sin_family, &n->addr.sin_addr, addr_str,
+                       sizeof(struct sockaddr_in));
+    if (NULL == result) {
+      printf("Invalid destination address.\n");
       break;
     }
+    _cmd_send(addr_str, &tokens[2]);
+    break;
   }
 cleanup:
   free_tokenlist(tokens);

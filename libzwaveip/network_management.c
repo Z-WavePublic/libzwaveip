@@ -267,12 +267,14 @@ static int is_packet_valid(const uint8_t const *packet, uint16_t len) {
 static void keys_report_received(void) {
   int i;
   pprint_incoming();
-  if (m_context.packet_buf[2] | NODE_ADD_KEYS_REPORT_REQUEST_CSA_BIT) {
+  if (m_context.packet_buf[3] & NODE_ADD_KEYS_REPORT_REQUEST_CSA_BIT) {
     m_context.inclusion_mode = CSA_INCLUSION;
+  } else {
+	m_context.inclusion_mode = NORMAL_INCLUSION;
   }
-  evt_handler_buf.requested_keys.requested_keys = m_context.packet_buf[3];
+  evt_handler_buf.requested_keys.requested_keys = m_context.packet_buf[4];
   evt_handler_buf.requested_keys.csa_requested =
-      (m_context.packet_buf[2] & NODE_ADD_KEYS_REPORT_REQUEST_CSA_BIT) ? 1 : 0;
+      (m_context.packet_buf[3] & NODE_ADD_KEYS_REPORT_REQUEST_CSA_BIT) ? 1 : 0;
   evt_handler_buf.requested_keys.type = APPROVE_REQUESTED_KEYS;
   net_mgmt_command_handler(evt_handler_buf);
 }

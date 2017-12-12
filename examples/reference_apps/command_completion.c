@@ -211,7 +211,7 @@ char* my_strtok(const char* string) {
 
 return_token:
   *d = 0;
-  s++;
+  if (strlen(s) > 0) { s++; }
   token_state = TOKEN_STATE_WORD_START;
   return token_buffer;
 }

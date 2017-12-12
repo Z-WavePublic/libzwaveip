@@ -150,13 +150,22 @@ static int THREAD_cleanup() {
   return 1;
 }
 
+static pthread_mutex_t ssl_init_lock = PTHREAD_MUTEX_INITIALIZER;
+static int ssl_init_done = 0;
+
 static void openssl_init() {
-  if (user_data_index == -1) {
-    THREAD_setup();
-    OpenSSL_add_ssl_algorithms();
-    SSL_load_error_strings();
-    user_data_index = SSL_get_ex_new_index(0, "pinfo index", NULL, NULL, NULL);
+
+  pthread_mutex_lock(&ssl_init_lock);
+  if (ssl_init_done == 0) {
+	  if (user_data_index == -1) {
+		THREAD_setup();
+		OpenSSL_add_ssl_algorithms();
+		SSL_load_error_strings();
+		user_data_index = SSL_get_ex_new_index(0, "pinfo index", NULL, NULL, NULL);
+	  }
+	  ssl_init_done = 1;
   }
+  pthread_mutex_unlock(&ssl_init_lock);
 }
 
 static int handle_socket_error() {
@@ -376,12 +385,19 @@ void *connection_handle(void *info) {
   struct timeval timeout;
   int num_timeouts = 0, max_timeouts = 30 * 10;
 
+  // Store a self-pipe in pass_info's 'fd'.
+  int self_pipe[2];
+  pipe(self_pipe);
+  pinfo->fd = self_pipe[1];
+
 #ifndef WIN32
   pthread_detach(pthread_self());
 #endif
 
-  OPENSSL_assert(pinfo->remote_addr.ss.ss_family ==
-                 pinfo->local_addr.ss.ss_family);
+  if (!(pinfo->remote_addr.ss.ss_family == pinfo->local_addr.ss.ss_family)) {
+    goto cleanup;
+  }
+
   fd = socket(pinfo->remote_addr.ss.ss_family, SOCK_DGRAM, 0);
   if (fd < 0) {
     perror("socket");
@@ -419,21 +435,32 @@ void *connection_handle(void *info) {
       if (bind(fd, (const struct sockaddr *)&pinfo->local_addr,
                sizeof(struct sockaddr_in)) < 0) {
         perror("bind");
+        goto cleanup;
       }
       if (connect(fd, (struct sockaddr *)&pinfo->remote_addr,
                   sizeof(struct sockaddr_in)) < 0) {
         perror("connect");
+        goto cleanup;
       }
       break;
+
     case AF_INET6:
       setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&off, sizeof(off));
-      bind(fd, (const struct sockaddr *)&pinfo->local_addr,
-           sizeof(struct sockaddr_in6));
-      connect(fd, (struct sockaddr *)&pinfo->remote_addr,
-              sizeof(struct sockaddr_in6));
+
+      if (bind(fd, (const struct sockaddr *)&pinfo->local_addr,
+           sizeof(struct sockaddr_in6)) < 0) {
+          perror("bind");
+          goto cleanup;
+      }
+      if (connect(fd, (struct sockaddr *)&pinfo->remote_addr,
+              sizeof(struct sockaddr_in6)) < 0) {
+          perror("connect");
+          goto cleanup;
+      }
       break;
+
     default:
-      OPENSSL_assert(0);
+      goto cleanup;
       break;
   }
 
@@ -506,9 +533,12 @@ void *connection_handle(void *info) {
     goto cleanup;
   }
 
+  pthread_mutex_lock(&pinfo->handshake_mutex);
+
   pinfo->is_running = 1;
 
   pthread_cond_signal(&pinfo->handshake_cond);
+  pthread_mutex_unlock(&pinfo->handshake_mutex);
 
   while (!(SSL_get_shutdown(ssl) & SSL_RECEIVED_SHUTDOWN) &&
          num_timeouts < max_timeouts && pinfo->is_running) {
@@ -531,12 +561,38 @@ void *connection_handle(void *info) {
           /* Handle socket timeouts */
           if (BIO_ctrl(SSL_get_rbio(ssl), BIO_CTRL_DGRAM_GET_RECV_TIMER_EXP, 0,
                        NULL)) {
-            num_timeouts++;
-            if (pinfo->is_client && num_timeouts > 25 * 10) {
-              zconnection_send_keepalive(&pinfo->connection);
-              num_timeouts = 0;
+            // Wait up to 5 seconds for incoming data before retrying.
+            struct timeval timeout;
+            timeout.tv_sec = 5;
+            timeout.tv_usec = 0;
+
+            // Create an 'fd_set' that has only the fd being used by OpenSSL and
+            // a self-pipe used when signaling a shut down.
+            fd_set fds;
+            FD_ZERO(&fds);
+            FD_SET(fd, &fds);
+            FD_SET(self_pipe[0], &fds);
+
+            int err = select((self_pipe[0] > fd ? self_pipe[0] : fd) + 1,
+                             &fds, NULL, NULL, &timeout);
+            // Check if thread should still be running.
+            if (pinfo->is_running == 0) { goto cleanup; }
+            // Check if more data is available for reading.
+            if (err > 0) { continue; }
+
+            if (err == 0) {
+              // 'Ping' the 'server' with a keep-alive message after ~30
+              // seconds of inactivity.
+              num_timeouts++;
+              if (pinfo->is_client && num_timeouts > 5) {
+                zconnection_send_keepalive(&pinfo->connection);
+                num_timeouts = 0;
+              }
+              zconnection_timer_100ms(&pinfo->connection);
+            } else {
+              printf("Error in 'select' while reading: %d\n", errno);
+              goto cleanup;
             }
-            zconnection_timer_100ms(&pinfo->connection);
             reading = 0;
           }
           /* Just try again */
@@ -563,28 +619,36 @@ void *connection_handle(void *info) {
           break;
       }
     }
+
   }
 
 cleanup:
 
   SSL_shutdown(ssl);
 
-  pinfo->is_running = 0;
 
 #ifdef WIN32
   closesocket(fd);
 #else
   close(fd);
 #endif
+  close(self_pipe[0]);
+  close(self_pipe[1]);
 
   SSL_free(ssl);
   ERR_remove_state(0);
   if (verbose) printf("Thread %lx: done, connection closed.\n", id_function());
 #if WIN32
   ExitThread(0);
+  return 0;
 #else
+  pthread_mutex_lock(&pinfo->handshake_mutex);
+  pinfo->is_running = 0;
   pthread_cond_signal(&pinfo->handshake_cond);
+  pthread_mutex_unlock(&pinfo->handshake_mutex);
+
   pthread_exit((void *)NULL);
+  return NULL;
 #endif
 }
 
@@ -744,7 +808,12 @@ struct zconnection *zclient_start(const char *remote_address, uint16_t port,
   }
 #endif
 
-  pthread_cond_wait(&info->handshake_cond, &info->handshake_mutex);
+  pthread_mutex_lock(&info->handshake_mutex);
+  if (info->is_running == 0) {
+	  pthread_cond_wait(&info->handshake_cond, &info->handshake_mutex);
+  }
+  pthread_mutex_unlock(&info->handshake_mutex);
+
   if (info->is_running) {
     return &info->connection;
   }
@@ -760,8 +829,15 @@ error:
 void zclient_stop(struct zconnection *handle) {
   struct pass_info *info = (struct pass_info *)handle->info;
 
+  pthread_mutex_lock(&info->handshake_mutex);
+
   info->is_running = 0;
+
+  // 'Poke' the self-pipe stored in pass_info to signal a shut down.
+  write(info->fd, (char[10]){ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 }, 10);
+
   pthread_cond_wait(&info->handshake_cond, &info->handshake_mutex);
+  pthread_mutex_unlock(&info->handshake_mutex);
 
   // TODO Normally I would use this instead of pthread_cond_wait, but the join
   // call fails...
