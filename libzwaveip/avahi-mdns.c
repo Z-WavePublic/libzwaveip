@@ -24,6 +24,7 @@
 #include <assert.h>
 #include <stdlib.h>
 #include <time.h>
+#include <sys/socket.h>
 #include <avahi-client/client.h>
 #include <avahi-client/lookup.h>
 #include <avahi-common/simple-watch.h>
