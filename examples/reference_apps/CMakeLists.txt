@@ -22,9 +22,3 @@ target_link_libraries(reference_listener zwaveip zw_parse_xml xml2 ${OPENSSL_LIB
 
 add_custom_command(TARGET reference_client PRE_BUILD COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${CMAKE_SOURCE_DIR}/config $<TARGET_FILE_DIR:reference_client>)
-
-
-# if (APPLE)
-# target_link_libraries(reference_client zwaveip edit zw_parse_xml xml2 zw_cmd_tool -ltermcap ${MDNS_LIBS} ${OPENSSL_LIBRARIES})
-# elseif(UNIX)
-# target_link_libraries(reference_client zwaveip edit zw_parse_xml xml2 zw_cmd_tool -lbsd -ltermcap ${MDNS_LIBS} ${OPENSSL_LIBRARIES})
