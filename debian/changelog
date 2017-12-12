@@ -1,4 +1,11 @@
-libzwaveip (0.1) unstable; urgency=medium
+matrixio-libzwaveip (0.1.1) unstable; urgency=medium
+
+  * Update Library from: https://github.com/Z-WavePublic/libzwaveip.
+  * Change libzwave to matrixio-libzwave
+
+ -- Kevin Patino <kevin.patino@admobilize.com>  Fri, 02 Jun 2017 20:16:45 +0000
+
+matrixio-libzwaveip (0.1) unstable; urgency=medium
 
   * Initial release.
 
