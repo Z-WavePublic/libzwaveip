@@ -1,7 +1,7 @@
 pipeline:
   build-debs:
     when:
-      branch: master
+      branch: [master, dev]
       event: [ push, pull_request, tag ]
     image: gcr.io/admobilize-testing/builder-qemu:latest
     privileged: true
