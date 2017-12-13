@@ -27,7 +27,7 @@ pipeline:
 
   upload-debs:
     when:
-      branch: master
+      branch: [master ,dev]
       event: [ push, tag ]
     image: gcr.io/admobilize-testing/gce-builder:latest
     secrets: [aws_access_key_id, aws_secret_access_key, gpg_key, gpg_pass]
@@ -76,7 +76,7 @@ pipeline:
     channel: notifications
     when:
       status: [ success, failure ]
-      branch: master
+      branch: [master ,dev]
       event: [ push, tag ]
     template: file:///drone/src/github.com/matrix-io/libzwaveip/notification.tpl
 
