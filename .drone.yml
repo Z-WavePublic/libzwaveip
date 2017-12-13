@@ -13,12 +13,14 @@ pipeline:
       echo "deb https://apt.matrix.one/raspbian ${CODENAME} $COMPONENT" > /etc/apt/sources.list.d/matrixlabs.list
       apt-get update
       apt-get install --yes libavahi-client-dev libxml2-dev libbsd-dev libncurses5-dev
-      if [ "${CODENAME}" == "stretch" ]; then
-      apt-get install --yes libssl1.0-dev 
-      fi
-      if [ "${CODENAME}" == "jessie" ]; then
-      apt-get install --yes libssl-dev
-      fi
+      case ${CODENAME} in
+        stretch)      
+          apt-get install --yes libssl1.0-dev
+          ;; 
+        jessie)
+          apt-get install --yes libssl-dev
+          ;;
+      esac
       mv debian/control.${CODENAME} debian/control
       debuild -us -uc -b
       mv ../*.deb .
