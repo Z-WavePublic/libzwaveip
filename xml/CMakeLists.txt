@@ -5,10 +5,7 @@ include_directories(${LIBXML2_INCLUDE_DIR})
 include(FindPythonInterp)
 find_package(LibXml2)
 
-if(NOT CMAKE_C_FLAGS)
-  # Using gnu99 instead of c99 to get strdup(3)
-  set(CMAKE_C_FLAGS "-std=gnu99")
-endif()
+set(CMAKE_C_FLAGS "-std=gnu99")
 
 add_custom_command(OUTPUT zw_gen_hdr.c
   COMMAND ${PYTHON_EXECUTABLE} generate_c_decoder.py  > ${CMAKE_CURRENT_BINARY_DIR}/zw_gen_hdr.c
