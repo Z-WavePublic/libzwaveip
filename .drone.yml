@@ -2,7 +2,7 @@ pipeline:
   build-debs:
     when:
       branch: [master, dev]
-      event: [ push, pull_request, tag ]
+      event: [ push, tag ]
     image: gcr.io/admobilize-testing/builder-qemu:latest
     privileged: true
     mountimg: ${MOUNTIMG}
@@ -26,7 +26,7 @@ pipeline:
   upload-debs:
     when:
       branch: [master, dev]
-      event: [ push, pull_request, tag ]
+      event: [ push, tag ]
     image: gcr.io/admobilize-testing/gce-builder:latest
     secrets: [aws_access_key_id, aws_secret_access_key, gpg_key, gpg_pass]
     commands:
@@ -75,7 +75,7 @@ pipeline:
     when:
       status: [ success, failure ]
       branch: [master, dev]
-      event: [ push, pull_request, tag ]
+      event: [ push, tag ]
     template: file:///drone/src/github.com/matrix-io/libzwaveip/notification.tpl
 
 matrix:
