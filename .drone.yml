@@ -1,0 +1,85 @@
+pipeline:
+  build-debs:
+    when:
+      branch: [master, dev]
+      event: [ push, pull_request, tag ]
+    image: gcr.io/admobilize-testing/builder-qemu:latest
+    privileged: true
+    mountimg: ${MOUNTIMG}
+    mountoffset: ${MOUNTOFFSET}
+    body: |
+      curl https://apt.matrix.one/doc/apt-key.gpg | apt-key add -
+      export COMPONENT=$([ "${DRONE_BUILD_EVENT}" = "tag" ] && echo "main" || echo "unstable")
+      echo "deb https://apt.matrix.one/raspbian ${CODENAME} $COMPONENT" > /etc/apt/sources.list.d/matrixlabs.list
+      apt-get update
+      apt-get install --yes libssl1.0-dev libavahi-client-dev libxml2-dev libbsd-dev libncurses5-dev
+      debuild -us -uc -b
+      mv ../*.deb .
+
+  upload-debs:
+    when:
+      branch: master
+      event: [ push, pull_request, tag ]
+    image: gcr.io/admobilize-testing/gce-builder:latest
+    secrets: [aws_access_key_id, aws_secret_access_key, gpg_key, gpg_pass]
+    commands:
+      # Prepare GPG
+      - echo "$${GPG_KEY}" > /tmp/tmpkey && gpg --import /tmp/tmpkey && rm /tmp/tmpkey
+      - echo "personal-digest-preferences SHA512" >> /root/.gnupg/gpg.conf
+
+      # Only TAG events are published to main
+      - export COMPONENT=$([ "${DRONE_BUILD_EVENT}" = "tag" ] && echo "main" || echo "unstable")
+      - export PKG_VER=$(dpkg-parsechangelog --show-field Version -ldebian/changelog)
+
+      # Upload packages
+      - mv matrixio-libzwaveip_$${PKG_VER}_armhf.deb 
+           matrixio-libzwaveip_${DISTRIBUTION}-${CODENAME}-$${PKG_VER}-$${COMPONENT}_armhf.deb
+      - mv matrixio-libzwaveip-dev_$${PKG_VER}_armhf.deb 
+           matrixio-libzwaveip-dev_${DISTRIBUTION}-${CODENAME}-$${PKG_VER}-$${COMPONENT}_armhf.deb
+
+      - echo "$${GPG_PASS}" | deb-s3 upload --bucket apt.matrix.one 
+        --prefix $DISTRIBUTION
+        --component $COMPONENT
+        --codename $CODENAME
+        --access-key-id $${AWS_ACCESS_KEY_ID}
+        --secret-access-key $${AWS_SECRET_ACCESS_KEY}
+        --sign info@matrix.one 
+        --gpg-options="--batch --passphrase-fd 0"
+        matrixio-libzwaveip_${DISTRIBUTION}-${CODENAME}-$${PKG_VER}-$${COMPONENT}_armhf.deb
+
+      - echo "$${GPG_PASS}" | deb-s3 upload --bucket apt.matrix.one 
+        --prefix $DISTRIBUTION
+        --component $COMPONENT
+        --codename $CODENAME
+        --access-key-id $${AWS_ACCESS_KEY_ID}
+        --secret-access-key $${AWS_SECRET_ACCESS_KEY}
+        --sign info@matrix.one 
+        --gpg-options="--batch --passphrase-fd 0"
+        matrixio-libzwaveip-dev_${DISTRIBUTION}-${CODENAME}-$${PKG_VER}-$${COMPONENT}_armhf.deb
+
+      # Render the notification template for the notify-slack step
+      - j2 --var-delimiter '%%' .drone/slack.tpl > notification.tpl
+
+  notify-always:
+    image: plugins/slack
+    secrets: [slack_webhook]
+    username: drone-ci-builder
+    channel: notifications
+    when:
+      status: [ success, failure ]
+      branch: master
+      event: [ push, pull_request, tag ]
+    template: file:///drone/src/github.com/matrix-io/libzwaveip/notification.tpl
+
+matrix:
+  include: 
+    - CODENAME: jessie
+      DISTRIBUTION: raspbian
+      MOUNTOFFSET: 48234496
+      MOUNTDIR: /drone/src/github.com/matrix-io/libzwaveip
+      MOUNTIMG: https://storage.googleapis.com/raspbian-images/2017-07-05-raspbian-jessie-debuild.img.gz
+    - CODENAME: stretch
+      MOUNTOFFSET: 48234496
+      MOUNTDIR: /drone/src/github.com/matrix-io/libzwaveip
+      DISTRIBUTION: raspbian
+      MOUNTIMG: https://storage.googleapis.com/raspbian-images/2017-08-16-raspbian-stretch-debuild.img.gz
