@@ -18,4 +18,3 @@ Section: libdevel
 Architecture: any
 Depends: matrixio-libzwaveip  (= ${binary:Version}), libc6-dev | libc-dev, ${misc:Depends}
 Description:  libzwaveip is a library to control Z-Wave devices from your IP network via a Z/IP Gateway
-
