@@ -25,7 +25,7 @@ pipeline:
 
   upload-debs:
     when:
-      branch: [master, dev]
+      branch: master
       event: [ push, tag ]
     image: gcr.io/admobilize-testing/gce-builder:latest
     secrets: [aws_access_key_id, aws_secret_access_key, gpg_key, gpg_pass]
