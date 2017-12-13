@@ -12,12 +12,13 @@ pipeline:
       export COMPONENT=$([ "${DRONE_BUILD_EVENT}" = "tag" ] && echo "main" || echo "unstable")
       echo "deb https://apt.matrix.one/raspbian ${CODENAME} $COMPONENT" > /etc/apt/sources.list.d/matrixlabs.list
       apt-get update
-      if [${CODENAME} = stretch]
+      echo 
+      if [${CODENAME} = "stretch"]
       then
       apt-get install --yes libssl1.0-dev libavahi-client-dev libxml2-dev libbsd-dev libncurses5-dev
       mv debian/control.stretch debian/control
       fi
-      if [${CODENAME} = jessie]
+      if [${CODENAME} = "jessie"]
       then
       apt-get install --yes libssl-dev libavahi-client-dev libxml2-dev libbsd-dev libncurses5-dev
       mv debian/control.jessie debian/control
