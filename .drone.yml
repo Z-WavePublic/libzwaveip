@@ -12,7 +12,7 @@ pipeline:
       export COMPONENT=$([ "${DRONE_BUILD_EVENT}" = "tag" ] && echo "main" || echo "unstable")
       echo "deb https://apt.matrix.one/raspbian ${CODENAME} $COMPONENT" > /etc/apt/sources.list.d/matrixlabs.list
       apt-get update
-      apt-get install --yes llibssl1.0-dev libavahi-client-dev libxml2-dev libbsd-dev libncurses5-dev
+      apt-get install --yes libssl1.0-dev libavahi-client-dev libxml2-dev libbsd-dev libncurses5-dev
       debuild -us -uc -b
       mv ../*.deb .
 
