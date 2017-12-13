@@ -76,7 +76,7 @@ pipeline:
     channel: notifications
     when:
       status: [ success, failure ]
-      branch: [master, dev]
+      branch: master
       event: [ push, tag ]
     template: file:///drone/src/github.com/matrix-io/libzwaveip/notification.tpl
 
