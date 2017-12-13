@@ -32,10 +32,10 @@ pipeline:
       - export PKG_VER=$(dpkg-parsechangelog --show-field Version -ldebian/changelog)
 
       # Upload packages
-      - mv libzwaveip_$${PKG_VER}_armhf.deb 
-           libzwaveip_${DISTRIBUTION}-${CODENAME}-$${PKG_VER}-$${COMPONENT}_armhf.deb
-      - mv libzwaveip-dev_$${PKG_VER}_armhf.deb 
-           libzwaveip-dev_${DISTRIBUTION}-${CODENAME}-$${PKG_VER}-$${COMPONENT}_armhf.deb
+      - mv matrixio-libzwaveip_$${PKG_VER}_armhf.deb 
+           matrixio-libzwaveip_${DISTRIBUTION}-${CODENAME}-$${PKG_VER}-$${COMPONENT}_armhf.deb
+      - mv matrixio-libzwaveip-dev_$${PKG_VER}_armhf.deb 
+           matrixio-libzwaveip-dev_${DISTRIBUTION}-${CODENAME}-$${PKG_VER}-$${COMPONENT}_armhf.deb
 
       - echo "$${GPG_PASS}" | deb-s3 upload --bucket apt.matrix.one 
         --prefix $DISTRIBUTION
@@ -45,7 +45,7 @@ pipeline:
         --secret-access-key $${AWS_SECRET_ACCESS_KEY}
         --sign info@matrix.one 
         --gpg-options="--batch --passphrase-fd 0"
-        libzwaveip_${DISTRIBUTION}-${CODENAME}-$${PKG_VER}-$${COMPONENT}_armhf.deb
+        matrixio-libzwaveip_${DISTRIBUTION}-${CODENAME}-$${PKG_VER}-$${COMPONENT}_armhf.deb
 
       - echo "$${GPG_PASS}" | deb-s3 upload --bucket apt.matrix.one 
         --prefix $DISTRIBUTION
@@ -55,7 +55,7 @@ pipeline:
         --secret-access-key $${AWS_SECRET_ACCESS_KEY}
         --sign info@matrix.one 
         --gpg-options="--batch --passphrase-fd 0"
-        matrixio-malos_${DISTRIBUTION}-${CODENAME}-$${PKG_VER}-$${COMPONENT}_armhf.deb
+        matrixio-libzwaveip-dev_${DISTRIBUTION}-${CODENAME}-$${PKG_VER}-$${COMPONENT}_armhf.deb
 
       # Render the notification template for the notify-slack step
       - j2 --var-delimiter '%%' .drone/slack.tpl > notification.tpl
