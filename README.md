@@ -20,7 +20,24 @@ To get started quickly, use we recommend that you use the Raspberry Pi image we 
 0. Run the following commands:
 ```bash
 $ sudo apt-get update
-$ sudo apt-get install cmake libssl1.0-dev libavahi-client-dev libxml2-dev libbsd-dev libncurses5-dev git
+$ sudo apt-get install cmake libavahi-client-dev libxml2-dev libbsd-dev libncurses5-dev libncurses5-dev git
+```
+
+* Using **Raspbian Jessie** install:
+
+```
+sudo apt-get install --yes libssl-dev
+```
+
+* Using **Raspbian Stretch** install:
+
+```
+sudo apt-get install --yes libssl1.0-dev
+```
+
+Then:
+
+```
 $ git clone https://github.com/Z-WavePublic/libzwaveip.git
 $ cd libzwaveip
 $ mkdir build
