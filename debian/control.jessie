@@ -1,4 +1,4 @@
-Source: libzwaveip
+Source: matrixio-libzwaveip
 Section: libs
 Priority: optional
 Maintainer: Andres Calderon <andres.calderon@admobilize.com>
@@ -6,16 +6,15 @@ Build-Depends: debhelper (>= 9)
 Standards-Version: 3.9.5
 Homepage: https://github.com/matrix-io/libzwaveip
 
-Package: libzwaveip
+Package: matrixio-libzwaveip
 Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${shlibs:Depends}, ${misc:Depends}, libssl-dev, libxml2-dev, libbsd-dev, libncurses5-dev, libavahi-client-dev, avahi-utils
+Depends: ${shlibs:Depends}, ${misc:Depends}, libssl1.0.0, libxml2, libbsd0, libncurses5, libavahi-client3, avahi-utils
 Description: libzwaveip is a library to control Z-Wave devices from your IP network via a Z/IP Gateway
 
-Package: libzwaveip-dev
+Package: matrixio-libzwaveip-dev
 Section: libdevel
 Architecture: any
-Depends: libzwaveip  (= ${binary:Version}), libc6-dev | libc-dev, ${misc:Depends}
+Depends: matrixio-libzwaveip  (= ${binary:Version}), libc6-dev | libc-dev, ${misc:Depends}
 Description:  libzwaveip is a library to control Z-Wave devices from your IP network via a Z/IP Gateway
-
