@@ -290,3 +290,12 @@ void zconnection_get_remote_addr(struct zconnection *connection, struct sockaddr
   struct pass_info *info = (struct pass_info *)connection->info;
   memcpy(remote_addr, &info->remote_addr, sizeof(struct sockaddr_storage));
 }
+
+void zconnection_set_user_context(struct zconnection *connection, void *context) {
+	connection->user_context = context;
+}
+
+void *zconnection_get_user_context(struct zconnection *connection) {
+	return connection->user_context;
+}
+

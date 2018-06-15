@@ -141,6 +141,23 @@ void zconncetion_set_endpoint(struct zconnection* connection, uint8_t endpoint);
  */
 void zconnection_get_remote_addr(struct zconnection *connection, struct sockaddr_storage *remote_addr);
 
+
+/**
+ * Set a pointer to some contextual information that will be associated with the zconnection.
+ * This can be retrieved and used during the transfer_func_t/transmit_done_func_t callbacks.
+ * @param connection	The handle to the connection object
+ * @return	A pointer to a user owned buffer associated with the zconnection
+ */
+void zconnection_set_user_context(struct zconnection *connection, void *context);
+
+/**
+ * Get a pointer to some contextual information associated with the zconnection
+ * @param connection	The handle to the connection object
+ * @return	A pointer to a user owned buffer associated with the zconnection
+ */
+void *zconnection_get_user_context(struct zconnection *connection);
+
+
 /**
  * @}
  */
