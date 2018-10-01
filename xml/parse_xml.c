@@ -1012,7 +1012,7 @@ uint8_t get_cmd_number(const char *cmd_class, const char *cmd,
 int get_cmd_class_name(uint8_t number, char *r_name, uint8_t r_len) {
   xmlNodePtr cur;
   xmlChar *key, *name;
-  char a_number[4];
+  char a_number[5];
 
   sprintf(a_number, "0x%x", number);
   cur = root->xmlChildrenNode;
