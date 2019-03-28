@@ -120,12 +120,12 @@ def emit_param(c):
 
     if(p_type=="BYTE"):
         length = 1
-        a = c.getElementsByTagName('valueattrib')[0]
-        if( a.getAttribute("showhex") == "true"):
-            display = "DISPLAY_HEX"
-        
-        if( a.getAttribute("hasdefines") == "true"):
-            display = "DISPLAY_ENUM"
+        #a = c.getElementsByTagName('valueattrib')[0]
+        #if( a.getAttribute("showhex") == "true"):
+        #    display = "DISPLAY_HEX"
+        #
+        #if( a.getAttribute("hasdefines") == "true"):
+        #    display = "DISPLAY_ENUM"
             
         for s in [ (k.getAttribute("flagname"),k.getAttribute("flagmask")) for k in c.getElementsByTagName("bitflag")]:
             enums = enums+'{"'+s[0]+'",'+s[1]+'},'
