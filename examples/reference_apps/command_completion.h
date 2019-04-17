@@ -35,4 +35,7 @@ void initialize_completer(void);
  */
 void completer_restart(void);
 
+/* Stop the command completer and save the history. */
+void stop_completer(void);
+
 #endif /* COMMAND_COMPLETION_H_ */
