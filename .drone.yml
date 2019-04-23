@@ -86,18 +86,6 @@ pipeline:
     template: |
       :loudspeaker: #{{truncate build.commit 8}} was uploaded to matrixio-libzwaveip
 
-  notify-dev:
-    image: plugins/slack
-    secrets: [slack_webhook]
-    username: drone-ci-builder
-    channel: notifications
-    when:
-      branch: dev
-      status: success
-      event: [ push, tag ]
-    template: |
-      :radioactive_sign: #{{truncate build.commit 8}} was uploaded to matrixio-libzwaveip-dev
-
 matrix:
   include: 
     - CODENAME: jessie
