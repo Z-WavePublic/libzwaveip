@@ -3,25 +3,18 @@ pipeline:
     when:
       branch: [master, dev]
       event: [ push, tag ]
-    image: gcr.io/admobilize-testing/creator-builder-${ARCHITECTURE}-${DISTRIBUTION}-${CODENAME}-${IMAGE_TAG}
+    image: gcr.io/admobilize-testing/creator-builder-${ARCHITECTURE}-${DISTRIBUTION}-${CODENAME}:${IMAGE_TAG}
     privileged: true
-    body: |
-      curl https://apt.matrix.one/doc/apt-key.gpg | apt-key add -
-      export COMPONENT=$([ "${DRONE_BUILD_EVENT}" = "tag" ] && echo "main" || echo "unstable")
-      echo "deb https://apt.matrix.one/raspbian ${CODENAME} $COMPONENT" > /etc/apt/sources.list.d/matrixlabs.list
-      apt-get update
-      apt-get install --yes libavahi-client-dev libxml2-dev libbsd-dev libncurses5-dev
-      case ${CODENAME} in
-        stretch)      
-          apt-get install --yes libssl1.0-dev
-          ;; 
-        jessie)
-          apt-get install --yes libssl-dev
-          ;;
-      esac
-      mv debian/control.${CODENAME} debian/control
-      debuild -us -uc -b
-      mv ../*.deb .
+    commands:
+      - curl https://apt.matrix.one/doc/apt-key.gpg | apt-key add -
+      - export COMPONENT=$([ "${DRONE_BUILD_EVENT}" = "tag" ] && echo "main" || echo "unstable")
+      - echo "deb https://apt.matrix.one/raspbian ${CODENAME} $COMPONENT" > /etc/apt/sources.list.d/matrixlabs.list
+      - LIBSSL=$([ "${CODENAME}" = "jessie" ] && echo "libssl-dev" || echo "libssl1.0-dev")      
+      - apt-get update
+      - apt-get install --yes libavahi-client-dev libxml2-dev libbsd-dev libncurses5-dev $${LIBSSL}
+      - mv debian/control.${CODENAME} debian/control
+      - debuild -us -uc -b
+      - mv ../*.deb .
 
   upload-debs:
     when:
