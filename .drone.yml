@@ -1,24 +1,22 @@
 pipeline:
   build-debs:
     when:
-      branch: [master, dev]
+      branch: [master, ac/buster]
       event: [ push, tag ]
     image: gcr.io/admobilize-testing/creator-builder-${ARCHITECTURE}-${DISTRIBUTION}-${CODENAME}:${IMAGE_TAG}
     privileged: true
     commands:
       - curl https://apt.matrix.one/doc/apt-key.gpg | apt-key add -
-      - export COMPONENT=$([ "${DRONE_BUILD_EVENT}" = "tag" ] && echo "main" || echo "unstable")
-      - echo "deb https://apt.matrix.one/raspbian ${CODENAME} $COMPONENT" > /etc/apt/sources.list.d/matrixlabs.list
-      - LIBSSL=$([ "${CODENAME}" = "jessie" ] && echo "libssl-dev" || echo "libssl1.0-dev")      
-      - apt-get update
-      - apt-get install --yes libavahi-client-dev libxml2-dev libbsd-dev libncurses5-dev $${LIBSSL}
+      - echo "deb https://apt.matrix.one/raspbian ${CODENAME} main" > /etc/apt/sources.list.d/matrixlabs.list
+      - ${UPDATE_CMD}
+      - apt-get install --yes libavahi-client-dev libxml2-dev libbsd-dev libncurses5-dev libssl1.0-dev
       - mv debian/control.${CODENAME} debian/control
       - debuild -us -uc -b
       - mv ../*.deb .
 
   upload-debs:
     when:
-      branch: [master , dev]
+      branch: [master]
       event: [ push, tag ]
     image: gcr.io/admobilize-testing/gce-builder:latest
     secrets: [aws_access_key_id, aws_secret_access_key, gpg_key, gpg_pass]
@@ -81,12 +79,14 @@ pipeline:
 
 matrix:
   include: 
-    - CODENAME: jessie
-      DISTRIBUTION: raspbian
-      ARCHITECTURE: armhf
-      IMAGE_TAG: 3181f193
-    
     - CODENAME: stretch
       DISTRIBUTION: raspbian
       ARCHITECTURE: armhf
-      IMAGE_TAG: 3181f193
+      UPDATE_CMD: "apt update"
+      IMAGE_TAG: 84d9bfb7 
+
+    - CODENAME: buster
+      DISTRIBUTION: raspbian
+      ARCHITECTURE: armhf
+      UPDATE_CMD: "apt update -y --allow-releaseinfo-change"
+      IMAGE_TAG: 84d9bfb7
