@@ -769,6 +769,7 @@ int main(int argc, char **argv) {
 
     // Check for EOF.
     if (!input) {
+      stop_completer();
       break;
     }
 
@@ -783,6 +784,7 @@ int main(int argc, char **argv) {
     free(input);
 
     if (!running) {
+      stop_completer();
       break;
     }
   }

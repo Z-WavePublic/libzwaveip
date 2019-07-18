@@ -60,6 +60,7 @@ struct zconnection {
   transfer_func_t recv;
   transmit_done_func_t transmit_done;
   void* info;
+  void* user_context;
   uint16_t timeout;
   pthread_mutex_t mutex;
   pthread_cond_t send_done_cond;
