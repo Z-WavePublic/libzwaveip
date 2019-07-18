@@ -1,3 +1,10 @@
+matrixio-libzwaveip (0.1.2) unstable; urgency=medium
+
+  * Raspbian Buster support
+  * Bye Jessie
+
+ -- Andres Calderon <andres.calderon@admobilize.com>  Thu, 18 Jul 2019 15:00:00 +0000
+
 matrixio-libzwaveip (0.1.1) unstable; urgency=medium
 
   * Update Library from: https://github.com/Z-WavePublic/libzwaveip.

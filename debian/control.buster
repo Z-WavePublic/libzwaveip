@@ -10,7 +10,7 @@ Package: matrixio-libzwaveip
 Architecture: any
 Multi-Arch: same
 Pre-Depends: ${misc:Pre-Depends}
-Depends: ${shlibs:Depends}, ${misc:Depends}, libssl1.0.0, libxml2, libbsd0, libncurses5, libavahi-client3, avahi-utils
+Depends: ${shlibs:Depends}, ${misc:Depends}, libssl1.0.2, libxml2, libbsd0, libncurses5, libavahi-client3, avahi-utils
 Description: libzwaveip is a library to control Z-Wave devices from your IP network via a Z/IP Gateway
 
 Package: matrixio-libzwaveip-dev
