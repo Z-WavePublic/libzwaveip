@@ -2,7 +2,7 @@ add_subdirectory( test )
 include_directories( . )
 include_directories(${LIBXML2_INCLUDE_DIR})
 
-include(FindPythonInterp)
+include(FindPython2)
 find_package(LibXml2)
 
 if(NOT CMAKE_C_FLAGS)
@@ -11,7 +11,7 @@ if(NOT CMAKE_C_FLAGS)
 endif()
 
 add_custom_command(OUTPUT zw_gen_hdr.c
-  COMMAND ${PYTHON_EXECUTABLE} generate_c_decoder.py  > ${CMAKE_CURRENT_BINARY_DIR}/zw_gen_hdr.c
+  COMMAND ${Python2_EXECUTABLE} generate_c_decoder.py  > ${CMAKE_CURRENT_BINARY_DIR}/zw_gen_hdr.c
   DEPENDS generate_c_decoder.py ../config/ZWave_custom_cmd_classes.xml
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
 )
